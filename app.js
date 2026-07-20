@@ -202,8 +202,9 @@ async function registerPlayer() {
     return;
   }
 
-  // Only 'Bruno' gets admin privileges
-  const isAdmin = name.toLowerCase() === 'bruno' || name.toLowerCase().includes('bruno');
+  // Only 'Gacela' or 'Bruno' gets admin privileges
+  const lowerName = name.toLowerCase();
+  const isAdmin = lowerName.includes('gacela') || lowerName.includes('bruno');
 
   const { data, error } = await sb.from('players').insert({
     name,
