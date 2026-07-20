@@ -369,7 +369,11 @@ function renderPichanga() {
   const dateStr = fecha.toLocaleDateString('es-CL', {
     weekday: 'long', day: 'numeric', month: 'long'
   });
-  document.getElementById('pichanga-date').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  // Venue & Cost
+  const venueEl = document.getElementById('pichanga-venue');
+  const costEl = document.getElementById('pichanga-cost');
+  if (venueEl) venueEl.textContent = activePichanga.sede || 'Zapping Center';
+  if (costEl) costEl.textContent = '$' + (activePichanga.costo_por_cabeza || 2500).toLocaleString('es-CL');
 
   // Status badge
   const statusBadge = document.getElementById('pichanga-status-badge');
