@@ -202,9 +202,8 @@ async function registerPlayer() {
     return;
   }
 
-  // Check if first player → make admin
-  const { count } = await sb.from('players').select('id', { count: 'exact', head: true });
-  const isAdmin = count === 0;
+  // Only 'Bruno' gets admin privileges
+  const isAdmin = name.toLowerCase() === 'bruno' || name.toLowerCase().includes('bruno');
 
   const { data, error } = await sb.from('players').insert({
     name,
