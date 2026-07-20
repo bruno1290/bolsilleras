@@ -122,10 +122,48 @@ async function showLoginPlayerList() {
   });
 }
 
-function showPinInput(playerId, playerName) {
+async function showPinInput(playerId, playerName) {
+  showLoading();
+  const { data: player, error } = await sb.from('players').select('*').eq('id', playerId).single();
+  hideLoading();
+
+  if (error || !player) {
+    showToast('Error al seleccionar jugador', 'error');
+    return;
+  }
+
+  const lower = player.name.toLowerCase();
+  const isGacelaOrBruno = lower.includes('gacela') || lower.includes('bruno');
+
+  // Pre-created player with default PIN '1234' sets their own PIN
+  if (player.pin === '1234' && !isGacelaOrBruno) {
+    const newPin = prompt(`¡Hola ${player.name}! 👋\nIngresa tu nueva clave de 4 dígitos para tu cuenta:`);
+    if (!newPin || newPin.trim().length !== 4 || !/^\d{4}$/.test(newPin.trim())) {
+      showToast('Debes ingresar una clave válida de 4 dígitos', 'error');
+      return;
+    }
+
+    const cleanPin = newPin.trim();
+    showLoading();
+    const { error: updateErr } = await sb.from('players').update({ pin: cleanPin }).eq('id', player.id);
+    hideLoading();
+
+    if (updateErr) {
+      showToast('Error guardando clave', 'error');
+      return;
+    }
+
+    player.pin = cleanPin;
+    showToast(`¡Clave guardada para ${player.name}! 🔐`);
+    currentPlayer = player;
+    saveSession(player.id);
+    enterApp();
+    return;
+  }
+
   document.getElementById('login-player-list-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'block';
-  document.getElementById('pin-player-name').textContent = playerName;
+  document.getElementById('pin-player-name').textContent = player.name;
   document.getElementById('login-pin').value = '';
   document.getElementById('login-pin').focus();
 
@@ -412,8 +450,9 @@ function renderPichanga() {
       document.getElementById('pick-blanco').classList.toggle('active-team', mySignup.team === 'blanco');
       document.getElementById('pick-color').classList.toggle('active-team', mySignup.team === 'color');
 
-      // Goals
+      // Goals & Assists
       document.getElementById('my-goals').textContent = mySignup.goals || 0;
+      document.getElementById('my-assists').textContent = mySignup.assists || 0;
     }
   }
 
@@ -429,14 +468,20 @@ function renderPichanga() {
   document.getElementById('signups-blanco').innerHTML = blancoPlayers.map(s => `
     <div class="signup-player-chip">
       <span>${escapeHtml(s.players?.name || '???')}</span>
-      ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
+      <div>
+        ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
+        ${s.assists > 0 ? `<span class="signup-player-goals" style="color:var(--draw-color);margin-left:0.2rem;">${s.assists}🅰️</span>` : ''}
+      </div>
     </div>
   `).join('') || '<div style="padding:0.5rem;font-size:0.7rem;color:var(--text-muted);">—</div>';
 
   document.getElementById('signups-color').innerHTML = colorPlayers.map(s => `
     <div class="signup-player-chip">
       <span>${escapeHtml(s.players?.name || '???')}</span>
-      ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
+      <div>
+        ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
+        ${s.assists > 0 ? `<span class="signup-player-goals" style="color:var(--draw-color);margin-left:0.2rem;">${s.assists}🅰️</span>` : ''}
+      </div>
     </div>
   `).join('') || '<div style="padding:0.5rem;font-size:0.7rem;color:var(--text-muted);">—</div>';
 
@@ -538,9 +583,26 @@ async function updateGoals(delta) {
     return;
   }
 
-  mySignup.goals = newGoals;
+// Assists
+document.getElementById('btn-assist-plus').addEventListener('click', () => updateAssists(1));
+document.getElementById('btn-assist-minus').addEventListener('click', () => updateAssists(-1));
+
+async function updateAssists(delta) {
+  if (!mySignup) return;
+  const newAssists = Math.max(0, (mySignup.assists || 0) + delta);
+
+  const { error } = await sb.from('signups')
+    .update({ assists: newAssists })
+    .eq('id', mySignup.id);
+
+  if (error) {
+    showToast('Error', 'error');
+    return;
+  }
+
+  mySignup.assists = newAssists;
   const idx = activeSignups.findIndex(s => s.id === mySignup.id);
-  if (idx >= 0) activeSignups[idx].goals = newGoals;
+  if (idx >= 0) activeSignups[idx].assists = newAssists;
   renderPichanga();
 }
 
@@ -654,14 +716,14 @@ async function loadStats() {
   // Get all closed pichangas with their signups
   const { data: pichangas, error: pError } = await sb
     .from('pichangas')
-    .select('id, score_blanco, score_color')
+    .select('id, score_blanco, score_color, costo_por_cabeza')
     .eq('status', 'closed');
 
   if (pError) { showToast('Error cargando stats', 'error'); return; }
 
   const { data: signups, error: sError } = await sb
     .from('signups')
-    .select('player_id, team, goals, pichanga_id, players(name)')
+    .select('player_id, team, goals, assists, pichanga_id, players(name)')
     .in('pichanga_id', pichangas.map(p => p.id));
 
   if (sError) { showToast('Error cargando stats', 'error'); return; }
@@ -677,15 +739,19 @@ async function loadStats() {
     if (!playerStats[s.player_id]) {
       playerStats[s.player_id] = {
         name: s.players?.name || '???',
-        matches: 0, wins: 0, draws: 0, losses: 0, goals: 0
+        matches: 0, wins: 0, draws: 0, losses: 0, goals: 0, assists: 0, totalSpent: 0
       };
     }
 
     const ps = playerStats[s.player_id];
     ps.matches++;
     ps.goals += (s.goals || 0);
+    ps.assists += (s.assists || 0);
 
     const pich = pichangaMap[s.pichanga_id];
+    const cost = pich ? (pich.costo_por_cabeza || 2500) : 2500;
+    ps.totalSpent += cost;
+
     if (pich && s.team) {
       const isDraw = pich.score_blanco === pich.score_color;
       if (isDraw) {
@@ -701,11 +767,12 @@ async function loadStats() {
 
   // Summary
   const totalGoals = pichangas.reduce((sum, p) => sum + (p.score_blanco || 0) + (p.score_color || 0), 0);
+  const grandTotalSpent = Object.values(playerStats).reduce((sum, ps) => sum + ps.totalSpent, 0);
+
   document.getElementById('total-matches').textContent = pichangas.length;
   document.getElementById('total-goals').textContent = totalGoals;
-
-  const { count } = await sb.from('players').select('id', { count: 'exact', head: true });
-  document.getElementById('total-players').textContent = count || 0;
+  const spentEl = document.getElementById('total-spent');
+  if (spentEl) spentEl.textContent = '$' + grandTotalSpent.toLocaleString('es-CL');
 
   // Build rows
   let rows = Object.entries(playerStats).map(([id, s]) => ({
@@ -752,6 +819,8 @@ async function loadStats() {
         <td class="td-losses">${r.losses}</td>
         <td class="td-winrate">${r.winRate}%</td>
         <td class="td-goals">${r.goals}</td>
+        <td>${r.assists}</td>
+        <td style="color:var(--yellow);font-weight:700;">$${r.totalSpent.toLocaleString('es-CL')}</td>
       </tr>
     `;
   }).join('');

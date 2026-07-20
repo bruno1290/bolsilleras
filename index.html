@@ -176,13 +176,23 @@
                   </div>
                 </div>
 
-                <!-- Goals counter -->
-                <div class="goals-counter">
-                  <h4>Tus goles</h4>
-                  <div class="goals-input-group">
-                    <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
-                    <span class="goals-display" id="my-goals">0</span>
-                    <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
+                <!-- Stats counters grid (Goles & Asistencias) -->
+                <div class="stats-counters-grid">
+                  <div class="goals-counter">
+                    <h4>Tus goles ⚽</h4>
+                    <div class="goals-input-group">
+                      <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
+                      <span class="goals-display" id="my-goals">0</span>
+                      <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
+                    </div>
+                  </div>
+                  <div class="goals-counter">
+                    <h4>Tus asistencias 🅰️</h4>
+                    <div class="goals-input-group">
+                      <button class="btn-goal-adjust" id="btn-assist-minus">−</button>
+                      <span class="goals-display" id="my-assists">0</span>
+                      <button class="btn-goal-adjust" id="btn-assist-plus">+</button>
+                    </div>
                   </div>
                 </div>
 
@@ -238,8 +248,8 @@
             <span class="summary-label">Goles</span>
           </div>
           <div class="summary-card">
-            <span class="summary-value" id="total-players">0</span>
-            <span class="summary-label">Jugadores</span>
+            <span class="summary-value" id="total-spent">$0</span>
+            <span class="summary-label">Pozo Total</span>
           </div>
         </div>
 
@@ -255,6 +265,8 @@
                 <th class="th-stat sortable" data-sort="losses">D</th>
                 <th class="th-stat sortable active-sort" data-sort="winRate">%V</th>
                 <th class="th-stat sortable" data-sort="goals">G</th>
+                <th class="th-stat sortable" data-sort="assists">A</th>
+                <th class="th-stat sortable" data-sort="totalSpent">Gasto Total</th>
               </tr>
             </thead>
             <tbody id="stats-body"></tbody>
