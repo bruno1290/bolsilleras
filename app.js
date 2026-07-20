@@ -154,26 +154,43 @@ async function showLoginPlayerList() {
   document.getElementById('login-register-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'none';
 
-  // Instant render from local cache if valid
+  const list = document.getElementById('login-player-list');
+  let hasRenderedCache = false;
+
+  // 1. Instant render from local cache if valid
   const cached = localStorage.getItem('bolsilleras_cached_players');
   if (cached) {
     try {
       const parsed = JSON.parse(cached);
       if (Array.isArray(parsed) && parsed.length > 0) {
         renderPlayerButtons(parsed);
+        hasRenderedCache = true;
       }
     } catch (e) {}
   }
 
-  // Fetch fresh players from Supabase
+  // 2. If no cache, show clean loading state so screen is never blank
+  if (!hasRenderedCache) {
+    list.innerHTML = `
+      <div style="text-align:center; padding:1.25rem; color:var(--text-secondary); font-size:0.85rem; font-weight:500;">
+        <div class="loading-spinner" style="width:24px; height:24px; margin:0 auto 0.5rem; border-width:2px;"></div>
+        Cargando lista de jugadores...
+      </div>
+    `;
+  }
+
+  // 3. Fetch fresh players from Supabase
   try {
     const { data: players, error } = await sb.from('players').select('id, name').order('name');
     if (!error && players) {
       localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
       renderPlayerButtons(players);
+    } else if (!hasRenderedCache) {
+      renderPlayerButtons([]);
     }
   } catch (err) {
     console.error('Error in showLoginPlayerList:', err);
+    if (!hasRenderedCache) renderPlayerButtons([]);
   }
 }
 
