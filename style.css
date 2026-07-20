@@ -416,6 +416,30 @@ main {
   flex-shrink: 0;
 }
 
+/* Match Info Bar */
+.match-info-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-around;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(92, 61, 153, 0.15);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.match-info-bar .info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.match-info-bar strong {
+  color: var(--text-primary);
+}
+
 /* ==================== PICHANGA CARD ==================== */
 .pichanga-card {
   background: var(--bg-card);
