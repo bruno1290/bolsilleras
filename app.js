@@ -149,22 +149,6 @@ function openCreatePichangaModal() {
   if (modal) modal.style.display = 'flex';
 }
 
-const DEFAULT_PLAYERS = [
-  { id: 'p1', name: 'Potter' },
-  { id: 'p2', name: 'Shadow' },
-  { id: 'p3', name: 'Matito' },
-  { id: 'p4', name: 'Gacela' },
-  { id: 'p5', name: 'Araya mediano' },
-  { id: 'p6', name: 'Nicotinho' },
-  { id: 'p7', name: 'José' },
-  { id: 'p8', name: 'Ara' },
-  { id: 'p9', name: 'Pablo' },
-  { id: 'p10', name: 'Lolo' },
-  { id: 'p11', name: 'Diego Frei' },
-  { id: 'p12', name: 'Ferran Torres' },
-  { id: 'p13', name: 'Alpaca' }
-];
-
 async function showLoginPlayerList() {
   document.getElementById('login-player-list-section').style.display = 'block';
   document.getElementById('login-register-section').style.display = 'none';
@@ -185,21 +169,28 @@ async function showLoginPlayerList() {
     } catch (e) {}
   }
 
-  // 2. If no cache, render default list immediately so it's NEVER empty
+  // 2. If no cache, show loading state
   if (!hasRenderedCache) {
-    renderPlayerButtons(DEFAULT_PLAYERS);
-    hasRenderedCache = true;
+    list.innerHTML = `
+      <div style="text-align:center; padding:1.25rem; color:var(--text-secondary); font-size:0.85rem; font-weight:500;">
+        <div class="loading-spinner" style="width:24px; height:24px; margin:0 auto 0.5rem; border-width:2px;"></div>
+        Cargando jugadores...
+      </div>
+    `;
   }
 
   // 3. Fetch fresh players from Supabase
   try {
     const { data: players, error } = await sb.from('players').select('id, name').order('name');
-    if (!error && players && players.length > 0) {
+    if (!error && players) {
       localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
       renderPlayerButtons(players);
+    } else if (!hasRenderedCache) {
+      renderPlayerButtons([]);
     }
   } catch (err) {
     console.error('Error in showLoginPlayerList:', err);
+    if (!hasRenderedCache) renderPlayerButtons([]);
   }
 }
 
@@ -352,6 +343,17 @@ async function registerPlayer() {
     showToast('Error al crear cuenta: ' + error.message, 'error');
     return;
   }
+
+  // Update local cache immediately so the new account is visible on reload
+  try {
+    const cached = localStorage.getItem('bolsilleras_cached_players');
+    let playersList = cached ? JSON.parse(cached) : [];
+    if (!playersList.find(p => p.id === data.id)) {
+      playersList.push({ id: data.id, name: data.name });
+      playersList.sort((a, b) => a.name.localeCompare(b.name));
+      localStorage.setItem('bolsilleras_cached_players', JSON.stringify(playersList));
+    }
+  } catch(e) {}
 
   currentPlayer = data;
   saveSession(data.id);
