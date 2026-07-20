@@ -91,35 +91,46 @@ async function showLoginScreen() {
   showLoginPlayerList();
 }
 
+function openRegisterForm() {
+  document.getElementById('login-player-list-section').style.display = 'none';
+  document.getElementById('login-pin-section').style.display = 'none';
+  document.getElementById('login-register-section').style.display = 'block';
+  setTimeout(() => {
+    const input = document.getElementById('reg-name');
+    if (input) input.focus();
+  }, 100);
+}
+
 async function showLoginPlayerList() {
   document.getElementById('login-player-list-section').style.display = 'block';
   document.getElementById('login-register-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'none';
 
-  const { data: players, error } = await sb.from('players').select('id, name').order('name');
-  if (error) {
-    showToast('Error cargando jugadores', 'error');
-    return;
-  }
+  try {
+    const { data: players, error } = await sb.from('players').select('id, name').order('name');
+    const list = document.getElementById('login-player-list');
 
-  const list = document.getElementById('login-player-list');
-  if (players.length === 0) {
-    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">No hay jugadores. Crea la primera cuenta.</p>';
-    return;
-  }
+    if (error || !players || players.length === 0) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">No hay jugadores cargados todavía. ¡Crea tu cuenta abajo!</p>';
+      return;
+    }
 
-  list.innerHTML = players.map(p => `
-    <button class="login-player-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}">
-      <div class="player-avatar">${getInitials(p.name)}</div>
-      <span>${escapeHtml(p.name)}</span>
-    </button>
-  `).join('');
+    list.innerHTML = players.map(p => `
+      <button class="login-player-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}">
+        <div class="player-avatar">${getInitials(p.name)}</div>
+        <span>${escapeHtml(p.name)}</span>
+      </button>
+    `).join('');
 
-  list.querySelectorAll('.login-player-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      showPinInput(btn.dataset.id, btn.dataset.name);
+    list.querySelectorAll('.login-player-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        showPinInput(btn.dataset.id, btn.dataset.name);
+      });
     });
-  });
+  } catch (err) {
+    console.error('Error in showLoginPlayerList:', err);
+    document.getElementById('login-player-list').innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">Crea tu cuenta abajo 👇</p>';
+  }
 }
 
 async function showPinInput(playerId, playerName) {

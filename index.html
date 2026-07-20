@@ -28,7 +28,7 @@
           <!-- Rendered by JS -->
         </div>
         <div class="login-divider"><span>o</span></div>
-        <button class="btn btn-secondary btn-lg" id="btn-show-register">+ Crear Cuenta Nueva</button>
+        <button class="btn btn-secondary btn-lg" id="btn-show-register" onclick="openRegisterForm()">+ Crear Cuenta Nueva</button>
       </div>
 
       <!-- Register Form (hidden by default) -->
@@ -43,7 +43,7 @@
           <input type="password" id="reg-pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
         </div>
         <button class="btn btn-primary btn-lg" id="btn-register">Crear Cuenta</button>
-        <button class="btn btn-ghost" id="btn-back-to-list">← Volver</button>
+        <button class="btn btn-ghost" id="btn-back-to-list" onclick="showLoginPlayerList()">← Volver</button>
       </div>
 
       <!-- PIN Input (hidden by default) -->
@@ -54,7 +54,7 @@
           <input type="password" id="login-pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
         </div>
         <button class="btn btn-primary btn-lg" id="btn-login-pin">Entrar</button>
-        <button class="btn btn-ghost" id="btn-back-from-pin">← Volver</button>
+        <button class="btn btn-ghost" id="btn-back-from-pin" onclick="showLoginPlayerList()">← Volver</button>
       </div>
     </div>
   </div>
