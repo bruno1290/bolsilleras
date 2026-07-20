@@ -307,6 +307,19 @@ async function registerPlayer() {
   enterApp();
 }
 
+function togglePostMatchSection() {
+  const sec = document.getElementById('postmatch-section');
+  if (!sec) return;
+  const isHidden = sec.style.display === 'none';
+  sec.style.display = isHidden ? 'block' : 'none';
+  const btn = document.getElementById('btn-toggle-postmatch');
+  if (btn) {
+    btn.textContent = isHidden
+      ? '▲ Ocultar reporte de equipo y goles'
+      : '📝 Reportar mi Equipo y Goles (Post-Partido)';
+  }
+}
+
 // Auto-login on page load
 async function tryAutoLogin() {
   const savedId = getSession();

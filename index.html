@@ -159,34 +159,42 @@
 
               <!-- Signed up controls -->
               <div id="signup-controls" style="display:none;">
-                <div class="signed-badge">✅ Estás anotado</div>
+                <div class="signed-badge">✅ Estás anotado para hoy</div>
 
-                <!-- Team picker -->
-                <div class="team-picker">
-                  <h4>¿En qué equipo juegas?</h4>
-                  <div class="team-picker-btns">
-                    <button class="team-pick-btn" data-team="blanco" id="pick-blanco">
-                      <span class="team-pick-icon">⬜</span>
-                      <span>Blanco</span>
-                    </button>
-                    <button class="team-pick-btn" data-team="color" id="pick-color">
-                      <span class="team-pick-icon">🎨</span>
-                      <span>Color</span>
-                    </button>
+                <!-- Post-Match Reporting Button -->
+                <button class="btn btn-secondary btn-lg" id="btn-toggle-postmatch" onclick="togglePostMatchSection()" style="margin-bottom:0.75rem;">
+                  📝 Reportar mi Equipo y Goles (Post-Partido)
+                </button>
+
+                <!-- Post-match section (hidden by default until clicked) -->
+                <div id="postmatch-section" style="display:none; padding:1rem; background:rgba(0,0,0,0.2); border-radius:var(--radius-lg); margin-bottom:1rem;">
+                  <!-- Team picker -->
+                  <div class="team-picker">
+                    <h4>¿En qué equipo jugaste?</h4>
+                    <div class="team-picker-btns">
+                      <button class="team-pick-btn" data-team="blanco" id="pick-blanco">
+                        <span class="team-pick-icon">⬜</span>
+                        <span>Blanco</span>
+                      </button>
+                      <button class="team-pick-btn" data-team="color" id="pick-color">
+                        <span class="team-pick-icon">🎨</span>
+                        <span>Color</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Goals counter -->
+                  <div class="goals-counter">
+                    <h4>Tus goles en el partido ⚽</h4>
+                    <div class="goals-input-group">
+                      <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
+                      <span class="goals-display" id="my-goals">0</span>
+                      <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
+                    </div>
                   </div>
                 </div>
 
-                <!-- Goals counter -->
-                <div class="goals-counter">
-                  <h4>Tus goles ⚽</h4>
-                  <div class="goals-input-group">
-                    <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
-                    <span class="goals-display" id="my-goals">0</span>
-                    <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
-                  </div>
-                </div>
-
-                <button class="btn btn-ghost btn-cancel-signup" id="btn-cancel-signup">❌ No juego al final</button>
+                <button class="btn btn-ghost btn-cancel-signup" id="btn-cancel-signup">❌ No puedo jugar al final</button>
               </div>
             </div>
 
