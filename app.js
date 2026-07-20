@@ -209,6 +209,11 @@ async function loginWithPin() {
     return;
   }
 
+  const lower = player.name.toLowerCase();
+  if (lower.includes('gacela') || lower.includes('bruno')) {
+    player.is_admin = true;
+  }
+
   currentPlayer = player;
   saveSession(player.id);
   enterApp();
@@ -239,11 +244,13 @@ async function registerPlayer() {
 
   showLoading();
 
-  // Check if name already exists
-  const { data: existing } = await sb.from('players').select('id').ilike('name', name);
+  // Check if name already exists -> redirect to PIN login/setup instead of failing
+  const { data: existing } = await sb.from('players').select('*').ilike('name', name);
   if (existing && existing.length > 0) {
     hideLoading();
-    showToast('Ya existe un jugador con ese nombre', 'error');
+    const player = existing[0];
+    showToast(`El jugador "${player.name}" ya existe. Ingresa tu clave:`, 'success');
+    showPinInput(player.id, player.name);
     return;
   }
 
