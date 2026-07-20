@@ -119,35 +119,49 @@ function openRegisterForm() {
   }, 100);
 }
 
+function renderPlayerButtons(players) {
+  const list = document.getElementById('login-player-list');
+  if (!players || players.length === 0) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">No hay jugadores registrados todavía. ¡Crea la primera cuenta abajo!</p>';
+    return;
+  }
+
+  list.innerHTML = players.map(p => `
+    <button class="login-player-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}">
+      <div class="player-avatar">${getInitials(p.name)}</div>
+      <span>${escapeHtml(p.name)}</span>
+    </button>
+  `).join('');
+
+  list.querySelectorAll('.login-player-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      showPinInput(btn.dataset.id, btn.dataset.name);
+    });
+  });
+}
+
 async function showLoginPlayerList() {
   document.getElementById('login-player-list-section').style.display = 'block';
   document.getElementById('login-register-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'none';
 
+  // Instant render from local cache
+  const cached = localStorage.getItem('bolsilleras_cached_players');
+  if (cached) {
+    try {
+      renderPlayerButtons(JSON.parse(cached));
+    } catch (e) {}
+  }
+
+  // Fetch fresh players from Supabase in background
   try {
     const { data: players, error } = await sb.from('players').select('id, name').order('name');
-    const list = document.getElementById('login-player-list');
-
-    if (error || !players || players.length === 0) {
-      list.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">No hay jugadores cargados todavía. ¡Crea tu cuenta abajo!</p>';
-      return;
+    if (!error && players) {
+      localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
+      renderPlayerButtons(players);
     }
-
-    list.innerHTML = players.map(p => `
-      <button class="login-player-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}">
-        <div class="player-avatar">${getInitials(p.name)}</div>
-        <span>${escapeHtml(p.name)}</span>
-      </button>
-    `).join('');
-
-    list.querySelectorAll('.login-player-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        showPinInput(btn.dataset.id, btn.dataset.name);
-      });
-    });
   } catch (err) {
     console.error('Error in showLoginPlayerList:', err);
-    document.getElementById('login-player-list').innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">Crea tu cuenta abajo 👇</p>';
   }
 }
 
@@ -349,9 +363,12 @@ function enterApp() {
   document.getElementById('screen-login').style.display = 'none';
   document.getElementById('screen-app').style.display = 'block';
 
-  // Set header
+  // Set header & admin privileges
+  const isAdmin = checkIsAdmin(currentPlayer);
+  currentPlayer.is_admin = isAdmin;
+
   document.getElementById('header-username').textContent = currentPlayer.name;
-  if (currentPlayer.is_admin) {
+  if (isAdmin) {
     document.getElementById('admin-badge').style.display = 'inline';
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
   } else {
@@ -645,27 +662,59 @@ async function updateGoals(delta) {
   renderPichanga();
 }
 
+function checkIsAdmin(player) {
+  if (!player) return false;
+  const name = (player.name || '').toLowerCase();
+  return name.includes('gacela') || name.includes('bruno') || player.is_admin === true;
+}
+
 // --- Admin Actions ---
-document.getElementById('btn-create-pichanga').addEventListener('click', async () => {
-  if (!currentPlayer.is_admin) return;
-
-  showLoading();
-  const { data, error } = await sb.from('pichangas').insert({
-    fecha: new Date().toISOString().split('T')[0],
-    status: 'open'
-  }).select().single();
-  hideLoading();
-
-  if (error) {
-    showToast('Error al crear pichanga: ' + error.message, 'error');
+document.getElementById('btn-create-pichanga').addEventListener('click', () => {
+  if (!checkIsAdmin(currentPlayer)) {
+    showToast('Solo Gacela (Admin) puede crear pichangas', 'error');
     return;
   }
+  document.getElementById('modal-create-pichanga').style.display = 'flex';
+});
 
-  activePichanga = data;
-  activeSignups = [];
-  mySignup = null;
-  renderPichanga();
-  showToast('¡Pichanga creada! 🏟️');
+document.getElementById('btn-cancel-create-pichanga').addEventListener('click', () => {
+  document.getElementById('modal-create-pichanga').style.display = 'none';
+});
+
+document.getElementById('btn-confirm-create-pichanga').addEventListener('click', async () => {
+  if (!checkIsAdmin(currentPlayer)) return;
+
+  const sede = document.getElementById('create-sede').value;
+  const hora = document.getElementById('create-hora').value;
+  const costo = parseInt(document.getElementById('create-costo').value, 10) || 2500;
+
+  document.getElementById('modal-create-pichanga').style.display = 'none';
+  showLoading();
+
+  try {
+    const { data, error } = await sb.from('pichangas').insert({
+      fecha: new Date().toISOString().split('T')[0],
+      status: 'open',
+      costo_por_cabeza: costo,
+      sede: sede
+    }).select().single();
+    hideLoading();
+
+    if (error) {
+      showToast('Error al crear pichanga: ' + error.message, 'error');
+      return;
+    }
+
+    activePichanga = data;
+    activeSignups = [];
+    mySignup = null;
+    renderPichanga();
+    showToast(`¡Pichanga creada en ${sede} (${hora})! 🏟️`);
+  } catch (err) {
+    hideLoading();
+    showToast('Error al crear pichanga', 'error');
+    console.error(err);
+  }
 });
 
 document.getElementById('btn-close-pichanga').addEventListener('click', async () => {
@@ -930,7 +979,10 @@ async function loadHistory() {
       return `${escapeHtml(s.players?.name || '???')}${goalStr}`;
     }).join('<br>') || '<span style="color:var(--text-muted)">—</span>';
 
-    const adminDeleteHtml = currentPlayer.is_admin ? `
+    const sedeName = m.sede || 'Zapping Center';
+    const costoVal = '$' + (m.costo_por_cabeza || 2500).toLocaleString('es-CL');
+
+    const adminDeleteHtml = checkIsAdmin(currentPlayer) ? `
       <div class="history-delete-container">
         <button class="btn-delete-match" data-id="${m.id}">🗑️ Eliminar</button>
       </div>
@@ -939,7 +991,8 @@ async function loadHistory() {
     return `
       <div class="history-card" data-id="${m.id}">
         <div class="history-card-header">
-          <span class="history-date">${dateStr}</span>
+          <span class="history-date">📍 <strong>${escapeHtml(sedeName)}</strong> · ${dateStr}</span>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--yellow);">${costoVal} / jug.</span>
         </div>
         <div class="history-score-row">
           <div class="history-team">

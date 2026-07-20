@@ -314,6 +314,38 @@
     </div>
   </div>
 
+  <!-- Pichanga Creation Modal -->
+  <div class="modal-overlay" id="modal-create-pichanga" style="display:none;">
+    <div class="modal">
+      <h3>➕ Crear Nueva Pichanga</h3>
+      <div class="form-group" style="margin-top:1rem;">
+        <label for="create-sede">📍 Sede / Estadio</label>
+        <select id="create-sede" style="width:100%; padding:0.75rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem;">
+          <option value="Zapping Center">📺 Zapping Center (Gran Estreno)</option>
+          <option value="El Pantano">🐊 El Pantano</option>
+          <option value="Lo Cañas">⚽ Lo Cañas</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="create-hora">🕘 Hora del Partido</label>
+        <select id="create-hora" style="width:100%; padding:0.75rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem;">
+          <option value="21:00 hrs">21:00 hrs (Horario Estelar)</option>
+          <option value="20:00 hrs">20:00 hrs</option>
+          <option value="22:00 hrs">22:00 hrs</option>
+          <option value="19:00 hrs">19:00 hrs</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="create-costo">💵 Costo por Jugador ($)</label>
+        <input type="number" id="create-costo" value="2500" placeholder="2500">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="btn-cancel-create-pichanga">Cancelar</button>
+        <button class="btn btn-primary" id="btn-confirm-create-pichanga">🚀 Crear Pichanga</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading -->
   <div class="loading-overlay" id="loading-overlay" style="display:none;">
     <div class="loading-spinner"></div>
