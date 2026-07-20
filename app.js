@@ -47,8 +47,24 @@ function showToast(message, type = 'success') {
   }, 2500);
 }
 
-function showLoading() { document.getElementById('loading-overlay').style.display = 'flex'; }
-function hideLoading() { document.getElementById('loading-overlay').style.display = 'none'; }
+let loadingTimer = null;
+function showLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'flex';
+  if (loadingTimer) clearTimeout(loadingTimer);
+  loadingTimer = setTimeout(() => {
+    hideLoading();
+  }, 2000);
+}
+
+function hideLoading() {
+  const el = document.getElementById('loading-overlay');
+  if (el) el.style.display = 'none';
+  if (loadingTimer) {
+    clearTimeout(loadingTimer);
+    loadingTimer = null;
+  }
+}
 
 // Modal
 let modalResolve = null;
@@ -86,12 +102,14 @@ function clearSession() {
 // LOGIN SCREEN
 // ==========================================
 async function showLoginScreen() {
+  hideLoading();
   document.getElementById('screen-login').style.display = 'block';
   document.getElementById('screen-app').style.display = 'none';
   showLoginPlayerList();
 }
 
 function openRegisterForm() {
+  hideLoading();
   document.getElementById('login-player-list-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'none';
   document.getElementById('login-register-section').style.display = 'block';
