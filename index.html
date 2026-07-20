@@ -100,29 +100,29 @@
       <!-- ========== PICHANGA TAB ========== -->
       <section id="tab-pichanga" class="tab-content active">
 
+        <!-- Zapping Sports Hype Banner (Always Visible for Premiere Excitement!) -->
+        <div class="zapping-banner">
+          <div class="zapping-badge">🔴 TRANSMISIÓN EN VIVO</div>
+          <div class="zapping-text">
+            <span class="zapping-channel">ZAPPING SPORTS 📺 · GRAN ESTRENO HISTÓRICO 21:00 HRS</span>
+            <span class="zapping-title">⚽ PICHANGA ESTELAR BOLSILLERAS</span>
+          </div>
+        </div>
+
         <!-- No pichanga state -->
         <div id="pichanga-empty" style="display:none;">
           <div class="empty-state">
             <span class="empty-icon">🏟️</span>
-            <p>No hay pichanga creada</p>
-            <p class="empty-hint">Espera a que el admin cree una</p>
+            <p>No hay pichanga abierta actualmente</p>
+            <p class="empty-hint">Gacela (Admin): Crea la pichanga del Gran Estreno abajo 👇</p>
           </div>
-          <button class="btn btn-primary btn-lg admin-only" id="btn-create-pichanga" style="display:none;">
-            ➕ Crear Pichanga de Hoy
+          <button class="btn btn-primary btn-lg admin-only" id="btn-create-pichanga" onclick="openCreatePichangaModal()" style="display:none; margin-top:1rem;">
+            🚀 Crear Pichanga del Gran Estreno
           </button>
         </div>
 
         <!-- Active pichanga -->
         <div id="pichanga-active" style="display:none;">
-          <!-- Zapping Sports Hype Banner -->
-          <div class="zapping-banner">
-            <div class="zapping-badge">🔴 TRANSMISIÓN EN VIVO</div>
-            <div class="zapping-text">
-              <span class="zapping-channel">ZAPPING SPORTS 📺 · ESTRENO HISTÓRICO 21:00 HRS</span>
-              <span class="zapping-title">⚽ PICHANGA ESTELAR BOLSILLERAS</span>
-            </div>
-          </div>
-
           <div class="pichanga-card">
             <!-- Match Metadata Info Bar -->
             <div class="match-info-bar">

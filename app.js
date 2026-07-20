@@ -140,20 +140,32 @@ function renderPlayerButtons(players) {
   });
 }
 
+function openCreatePichangaModal() {
+  if (!checkIsAdmin(currentPlayer)) {
+    showToast('Solo Gacela (Admin) puede crear pichangas', 'error');
+    return;
+  }
+  const modal = document.getElementById('modal-create-pichanga');
+  if (modal) modal.style.display = 'flex';
+}
+
 async function showLoginPlayerList() {
   document.getElementById('login-player-list-section').style.display = 'block';
   document.getElementById('login-register-section').style.display = 'none';
   document.getElementById('login-pin-section').style.display = 'none';
 
-  // Instant render from local cache
+  // Instant render from local cache if valid
   const cached = localStorage.getItem('bolsilleras_cached_players');
   if (cached) {
     try {
-      renderPlayerButtons(JSON.parse(cached));
+      const parsed = JSON.parse(cached);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        renderPlayerButtons(parsed);
+      }
     } catch (e) {}
   }
 
-  // Fetch fresh players from Supabase in background
+  // Fetch fresh players from Supabase
   try {
     const { data: players, error } = await sb.from('players').select('id, name').order('name');
     if (!error && players) {
