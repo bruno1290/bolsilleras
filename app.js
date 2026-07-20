@@ -626,26 +626,9 @@ async function updateGoals(delta) {
     return;
   }
 
-// Assists
-document.getElementById('btn-assist-plus').addEventListener('click', () => updateAssists(1));
-document.getElementById('btn-assist-minus').addEventListener('click', () => updateAssists(-1));
-
-async function updateAssists(delta) {
-  if (!mySignup) return;
-  const newAssists = Math.max(0, (mySignup.assists || 0) + delta);
-
-  const { error } = await sb.from('signups')
-    .update({ assists: newAssists })
-    .eq('id', mySignup.id);
-
-  if (error) {
-    showToast('Error', 'error');
-    return;
-  }
-
-  mySignup.assists = newAssists;
+  mySignup.goals = newGoals;
   const idx = activeSignups.findIndex(s => s.id === mySignup.id);
-  if (idx >= 0) activeSignups[idx].assists = newAssists;
+  if (idx >= 0) activeSignups[idx].goals = newGoals;
   renderPichanga();
 }
 
