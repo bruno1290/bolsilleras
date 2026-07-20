@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bolsilleras — Contador de Pichangas</title>
+  <meta name="description" content="Contador de pichangas para el grupo Bolsilleras. Regístrate, anótate y reporta tus goles.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ==================== LOGIN SCREEN ==================== -->
+  <div id="screen-login" class="screen">
+    <div class="login-container">
+      <div class="login-logo">
+        <img src="logo.png" alt="Bolsilleras" class="login-logo-img" id="login-logo-img">
+        <h1 class="login-title">Bolsilleras</h1>
+        <p class="login-subtitle">Contador de Pichangas</p>
+      </div>
+
+      <!-- Player List -->
+      <div id="login-player-list-section">
+        <h3 class="login-section-title">¿Quién eres?</h3>
+        <div class="login-player-list" id="login-player-list">
+          <!-- Rendered by JS -->
+        </div>
+        <div class="login-divider"><span>o</span></div>
+        <button class="btn btn-secondary btn-lg" id="btn-show-register">+ Crear Cuenta Nueva</button>
+      </div>
+
+      <!-- Register Form (hidden by default) -->
+      <div id="login-register-section" style="display:none;">
+        <h3 class="login-section-title">Crear Cuenta</h3>
+        <div class="form-group">
+          <label for="reg-name">Tu nombre</label>
+          <input type="text" id="reg-name" placeholder="Ej: Santana" maxlength="20" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="reg-pin">PIN de 4 dígitos</label>
+          <input type="password" id="reg-pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+        </div>
+        <button class="btn btn-primary btn-lg" id="btn-register">Crear Cuenta</button>
+        <button class="btn btn-ghost" id="btn-back-to-list">← Volver</button>
+      </div>
+
+      <!-- PIN Input (hidden by default) -->
+      <div id="login-pin-section" style="display:none;">
+        <h3 class="login-section-title">Ingresa tu PIN</h3>
+        <p class="pin-player-name" id="pin-player-name"></p>
+        <div class="form-group">
+          <input type="password" id="login-pin" placeholder="••••" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+        </div>
+        <button class="btn btn-primary btn-lg" id="btn-login-pin">Entrar</button>
+        <button class="btn btn-ghost" id="btn-back-from-pin">← Volver</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN APP SCREEN ==================== -->
+  <div id="screen-app" class="screen" style="display:none;">
+
+    <!-- Header -->
+    <header id="main-header">
+      <div class="header-content">
+        <div class="logo">
+          <img src="logo.png" alt="Bolsilleras" class="logo-img">
+          <div class="logo-text">
+            <h1>Bolsilleras</h1>
+          </div>
+        </div>
+        <div class="header-user">
+          <span class="header-username" id="header-username"></span>
+          <span class="admin-badge" id="admin-badge" style="display:none;">ADMIN</span>
+          <button class="btn-icon" id="btn-logout" title="Cerrar sesión">🚪</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav id="main-nav">
+      <button class="nav-btn active" data-tab="pichanga" id="nav-pichanga">
+        <span class="nav-icon">⚽</span>
+        <span class="nav-label">Pichanga</span>
+      </button>
+      <button class="nav-btn" data-tab="stats" id="nav-stats">
+        <span class="nav-icon">📊</span>
+        <span class="nav-label">Estadísticas</span>
+      </button>
+      <button class="nav-btn" data-tab="history" id="nav-history">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Historial</span>
+      </button>
+    </nav>
+
+    <main id="app">
+
+      <!-- ========== PICHANGA TAB ========== -->
+      <section id="tab-pichanga" class="tab-content active">
+
+        <!-- No pichanga state -->
+        <div id="pichanga-empty" style="display:none;">
+          <div class="empty-state">
+            <span class="empty-icon">🏟️</span>
+            <p>No hay pichanga creada</p>
+            <p class="empty-hint">Espera a que el admin cree una</p>
+          </div>
+          <button class="btn btn-primary btn-lg admin-only" id="btn-create-pichanga" style="display:none;">
+            ➕ Crear Pichanga de Hoy
+          </button>
+        </div>
+
+        <!-- Active pichanga -->
+        <div id="pichanga-active" style="display:none;">
+          <div class="pichanga-card">
+            <!-- Header -->
+            <div class="pichanga-card-header">
+              <div>
+                <h2 class="pichanga-date" id="pichanga-date"></h2>
+                <span class="pichanga-status" id="pichanga-status-badge"></span>
+              </div>
+              <div class="pichanga-score-mini" id="pichanga-score-mini">
+                <span class="score-team-mini score-blanco-mini">⬜ <strong id="live-score-blanco">0</strong></span>
+                <span class="score-vs-mini">-</span>
+                <span class="score-team-mini score-color-mini"><strong id="live-score-color">0</strong> 🎨</span>
+              </div>
+            </div>
+
+            <!-- My controls (only if pichanga is open) -->
+            <div id="my-controls" class="my-controls">
+              <!-- Not signed up -->
+              <div id="signup-prompt" style="display:none;">
+                <button class="btn btn-primary btn-lg btn-signup" id="btn-signup">🙋 ¡Me anoto!</button>
+              </div>
+
+              <!-- Signed up controls -->
+              <div id="signup-controls" style="display:none;">
+                <div class="signed-badge">✅ Estás anotado</div>
+
+                <!-- Team picker -->
+                <div class="team-picker">
+                  <h4>¿En qué equipo juegas?</h4>
+                  <div class="team-picker-btns">
+                    <button class="team-pick-btn" data-team="blanco" id="pick-blanco">
+                      <span class="team-pick-icon">⬜</span>
+                      <span>Blanco</span>
+                    </button>
+                    <button class="team-pick-btn" data-team="color" id="pick-color">
+                      <span class="team-pick-icon">🎨</span>
+                      <span>Color</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Goals counter -->
+                <div class="goals-counter">
+                  <h4>Tus goles</h4>
+                  <div class="goals-input-group">
+                    <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
+                    <span class="goals-display" id="my-goals">0</span>
+                    <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
+                  </div>
+                </div>
+
+                <button class="btn btn-ghost btn-cancel-signup" id="btn-cancel-signup">❌ No juego al final</button>
+              </div>
+            </div>
+
+            <!-- Signups list -->
+            <div class="signups-section">
+              <h3 class="signups-title">Anotados <span class="signup-count" id="signup-count">0</span></h3>
+              <div class="signups-teams">
+                <div class="signups-team-col">
+                  <div class="signups-team-header signups-blanco-header">
+                    <span>⬜ Blanco</span>
+                    <span class="signups-team-count" id="blanco-count">0</span>
+                  </div>
+                  <div class="signups-team-list" id="signups-blanco"></div>
+                </div>
+                <div class="signups-team-col">
+                  <div class="signups-team-header signups-color-header">
+                    <span>🎨 Color</span>
+                    <span class="signups-team-count" id="color-count">0</span>
+                  </div>
+                  <div class="signups-team-list" id="signups-color"></div>
+                </div>
+              </div>
+              <div id="signups-no-team" class="signups-no-team"></div>
+            </div>
+
+            <!-- Admin controls -->
+            <div class="admin-controls admin-only" id="admin-pichanga-controls" style="display:none;">
+              <button class="btn btn-secondary" id="btn-close-pichanga">🏁 Cerrar Pichanga</button>
+              <button class="btn btn-ghost btn-sm" id="btn-delete-pichanga">🗑️ Eliminar</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== STATS TAB ========== -->
+      <section id="tab-stats" class="tab-content">
+        <div class="section-header">
+          <h2>Tabla de Posiciones</h2>
+          <p class="section-subtitle">Ranking general de los Bolsilleros</p>
+        </div>
+
+        <div class="stats-summary">
+          <div class="summary-card">
+            <span class="summary-value" id="total-matches">0</span>
+            <span class="summary-label">Pichangas</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-value" id="total-goals">0</span>
+            <span class="summary-label">Goles</span>
+          </div>
+          <div class="summary-card">
+            <span class="summary-value" id="total-players">0</span>
+            <span class="summary-label">Jugadores</span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table id="stats-table">
+            <thead>
+              <tr>
+                <th class="th-rank">#</th>
+                <th class="th-name">Jugador</th>
+                <th class="th-stat sortable" data-sort="matches">PJ</th>
+                <th class="th-stat sortable" data-sort="wins">V</th>
+                <th class="th-stat sortable" data-sort="draws">E</th>
+                <th class="th-stat sortable" data-sort="losses">D</th>
+                <th class="th-stat sortable active-sort" data-sort="winRate">%V</th>
+                <th class="th-stat sortable" data-sort="goals">G</th>
+              </tr>
+            </thead>
+            <tbody id="stats-body"></tbody>
+          </table>
+          <div class="empty-state" id="stats-empty">
+            <span class="empty-icon">⚽</span>
+            <p>No hay datos todavía</p>
+            <p class="empty-hint">Juega tu primera pichanga</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== HISTORY TAB ========== -->
+      <section id="tab-history" class="tab-content">
+        <div class="section-header">
+          <h2>Historial</h2>
+          <p class="section-subtitle">Todas las pichangas jugadas</p>
+        </div>
+        <div id="history-list" class="history-list"></div>
+        <div class="empty-state" id="history-empty">
+          <span class="empty-icon">📋</span>
+          <p>No hay pichangas cerradas</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast-container"></div>
+
+  <!-- Confirmation Modal -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none;">
+    <div class="modal">
+      <h3 id="modal-title"></h3>
+      <p id="modal-message"></p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+        <button class="btn btn-danger" id="modal-confirm">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" id="loading-overlay" style="display:none;">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+</body>
+</html>
