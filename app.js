@@ -132,78 +132,85 @@ async function showPinInput(playerId, playerName) {
     return;
   }
 
-  const lower = player.name.toLowerCase();
-  const isGacelaOrBruno = lower.includes('gacela') || lower.includes('bruno');
+  const section = document.getElementById('login-pin-section');
+  const title = section.querySelector('.login-section-title');
+  const btn = document.getElementById('btn-login-pin');
 
-  // Pre-created player with default PIN '1234' sets their own PIN
-  if (player.pin === '1234' && !isGacelaOrBruno) {
-    const newPin = prompt(`¡Hola ${player.name}! 👋\nIngresa tu nueva clave de 4 dígitos para tu cuenta:`);
-    if (!newPin || newPin.trim().length !== 4 || !/^\d{4}$/.test(newPin.trim())) {
-      showToast('Debes ingresar una clave válida de 4 dígitos', 'error');
-      return;
-    }
+  const isDefaultPin = player.pin === '1234';
 
-    const cleanPin = newPin.trim();
-    showLoading();
-    const { error: updateErr } = await sb.from('players').update({ pin: cleanPin }).eq('id', player.id);
-    hideLoading();
-
-    if (updateErr) {
-      showToast('Error guardando clave', 'error');
-      return;
-    }
-
-    player.pin = cleanPin;
-    showToast(`¡Clave guardada para ${player.name}! 🔐`);
-    currentPlayer = player;
-    saveSession(player.id);
-    enterApp();
-    return;
+  if (isDefaultPin) {
+    title.textContent = 'Crea tu clave de 4 dígitos';
+    btn.textContent = 'Guardar Clave y Entrar';
+    section.dataset.isSetup = 'true';
+  } else {
+    title.textContent = 'Ingresa tu PIN';
+    btn.textContent = 'Entrar';
+    section.dataset.isSetup = 'false';
   }
 
   document.getElementById('login-player-list-section').style.display = 'none';
-  document.getElementById('login-pin-section').style.display = 'block';
+  section.style.display = 'block';
   document.getElementById('pin-player-name').textContent = player.name;
   document.getElementById('login-pin').value = '';
   document.getElementById('login-pin').focus();
 
-  // Store selected player id temporarily
-  document.getElementById('login-pin-section').dataset.playerId = playerId;
+  section.dataset.playerId = playerId;
 }
 
-// PIN login
+// PIN login / Setup handler
 document.getElementById('btn-login-pin').addEventListener('click', loginWithPin);
 document.getElementById('login-pin').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') loginWithPin();
 });
 
 async function loginWithPin() {
-  const playerId = document.getElementById('login-pin-section').dataset.playerId;
+  const section = document.getElementById('login-pin-section');
+  const playerId = section.dataset.playerId;
   const pin = document.getElementById('login-pin').value.trim();
+  const isSetup = section.dataset.isSetup === 'true';
 
-  if (pin.length !== 4) {
-    showToast('El PIN debe ser de 4 dígitos', 'error');
+  if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
+    showToast('La clave debe ser de 4 dígitos numéricos', 'error');
     return;
   }
 
   showLoading();
-  const { data, error } = await sb.from('players').select('*').eq('id', playerId).single();
-  hideLoading();
+  const { data: player, error } = await sb.from('players').select('*').eq('id', playerId).single();
 
-  if (error || !data) {
+  if (error || !player) {
+    hideLoading();
     showToast('Error al iniciar sesión', 'error');
     return;
   }
 
-  if (data.pin !== pin) {
-    showToast('PIN incorrecto', 'error');
+  if (isSetup) {
+    // Save new PIN
+    const { error: updateErr } = await sb.from('players').update({ pin }).eq('id', playerId);
+    hideLoading();
+
+    if (updateErr) {
+      showToast('Error al guardar clave: ' + updateErr.message, 'error');
+      return;
+    }
+
+    player.pin = pin;
+    showToast(`¡Clave creada para ${player.name}! 🔐`);
+    currentPlayer = player;
+    saveSession(player.id);
+    enterApp();
+    return;
+  }
+
+  hideLoading();
+  if (player.pin !== pin) {
+    showToast('Clave incorrecta', 'error');
     document.getElementById('login-pin').value = '';
     document.getElementById('login-pin').focus();
     return;
   }
 
-  currentPlayer = data;
-  saveSession(data.id);
+  currentPlayer = player;
+  saveSession(player.id);
   enterApp();
 }
 
