@@ -223,10 +223,16 @@
               <div id="signups-no-team" class="signups-no-team"></div>
             </div>
 
-            <!-- Admin controls -->
-            <div class="admin-controls admin-only" id="admin-pichanga-controls" style="display:none;">
-              <button class="btn btn-secondary" id="btn-close-pichanga">🏁 Cerrar Pichanga</button>
-              <button class="btn btn-ghost btn-sm" id="btn-delete-pichanga">🗑️ Eliminar</button>
+            <!-- Dedicated Admin Panel (Admin-Only, Gacela) -->
+            <div class="admin-panel-box admin-only" id="admin-pichanga-controls" style="display:none; margin:1rem; padding:1rem; background:rgba(245, 197, 24, 0.08); border:1px solid rgba(245, 197, 24, 0.3); border-radius:var(--radius-lg);">
+              <div style="font-size:0.75rem; font-weight:800; color:var(--yellow); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
+                <span>👑</span> <span>Panel de Control Admin (Exclusivo Gacela)</span>
+              </div>
+              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.75rem;">Una vez finalizado el partido y que todos reporten sus goles, cierra la pichanga para actualizar las estadísticas oficiales.</p>
+              <div style="display:flex; gap:0.5rem; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                <button class="btn btn-primary" id="btn-close-pichanga">🏁 Finalizar y Cerrar Pichanga</button>
+                <button class="btn btn-ghost btn-sm" id="btn-delete-pichanga" style="color:var(--danger);">🗑️ Eliminar</button>
+              </div>
             </div>
           </div>
         </div>
