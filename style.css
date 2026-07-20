@@ -348,6 +348,74 @@ main {
 .tab-content { display: none; animation: fadeSlideIn 0.35s ease; }
 .tab-content.active { display: block; }
 
+/* ==================== ZAPPING SPORTS BANNER ==================== */
+.zapping-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #110022 0%, #2b0845 50%, #4a0000 100%);
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  box-shadow: 0 4px 20px rgba(255, 0, 0, 0.2);
+  animation: fadeSlideIn 0.4s ease;
+}
+
+.zapping-badge {
+  background: #ff003b;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.05em;
+  animation: pulse 1.5s infinite;
+  box-shadow: 0 0 10px rgba(255, 0, 59, 0.6);
+  flex-shrink: 0;
+}
+
+.zapping-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.zapping-channel {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--yellow);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.zapping-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+}
+
+.match-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.75rem 1.25rem;
+  background: rgba(245, 197, 24, 0.07);
+  border-bottom: 1px solid rgba(245, 197, 24, 0.2);
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.match-notice strong {
+  color: var(--yellow);
+}
+
+.notice-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
 /* ==================== PICHANGA CARD ==================== */
 .pichanga-card {
   background: var(--bg-card);
