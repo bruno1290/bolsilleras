@@ -801,20 +801,41 @@ function setupRealtimeSubscriptions() {
 // STATS TAB
 // ==========================================
 async function loadStats() {
-  // Get all closed pichangas with their signups
-  const { data: pichangas, error: pError } = await sb
-    .from('pichangas')
-    .select('id, score_blanco, score_color, costo_por_cabeza')
-    .eq('status', 'closed');
+  try {
+    // Get all closed pichangas with their signups
+    const { data: pichangas, error: pError } = await sb
+      .from('pichangas')
+      .select('id, score_blanco, score_color, costo_por_cabeza')
+      .eq('status', 'closed');
 
-  if (pError) { showToast('Error cargando stats', 'error'); return; }
+    if (pError) {
+      console.error('Stats error:', pError);
+      return;
+    }
 
-  const { data: signups, error: sError } = await sb
-    .from('signups')
-    .select('player_id, team, goals, assists, pichanga_id, players(name)')
-    .in('pichanga_id', pichangas.map(p => p.id));
+    const table = document.getElementById('stats-table');
+    const empty = document.getElementById('stats-empty');
 
-  if (sError) { showToast('Error cargando stats', 'error'); return; }
+    if (!pichangas || pichangas.length === 0) {
+      document.getElementById('total-matches').textContent = '0';
+      document.getElementById('total-goals').textContent = '0';
+      const spentEl = document.getElementById('total-spent');
+      if (spentEl) spentEl.textContent = '$0';
+      if (table) table.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+
+    const { data: signups, error: sError } = await sb
+      .from('signups')
+      .select('player_id, team, goals, assists, pichanga_id, players(name)')
+      .in('pichanga_id', pichangas.map(p => p.id));
+
+    if (sError || !signups || signups.length === 0) {
+      if (table) table.style.display = 'none';
+      if (empty) empty.style.display = 'block';
+      return;
+    }
 
   // Build pichanga lookup
   const pichangaMap = {};
@@ -870,17 +891,15 @@ async function loadStats() {
   }));
 
   const tbody = document.getElementById('stats-body');
-  const table = document.getElementById('stats-table');
-  const empty = document.getElementById('stats-empty');
 
   if (rows.length === 0) {
-    table.style.display = 'none';
-    empty.style.display = 'block';
+    if (table) table.style.display = 'none';
+    if (empty) empty.style.display = 'block';
     return;
   }
 
-  table.style.display = 'table';
-  empty.style.display = 'none';
+  if (table) table.style.display = 'table';
+  if (empty) empty.style.display = 'none';
 
   // Sort
   rows.sort((a, b) => {
@@ -921,6 +940,9 @@ async function loadStats() {
       loadStats();
     };
   });
+  } catch (err) {
+    console.error('Error in loadStats:', err);
+  }
 }
 
 // ==========================================
