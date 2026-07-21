@@ -1042,8 +1042,16 @@ main {
   .pichanga-date { font-size: 1rem; }
   .pichanga-winner-big { font-size: 1.05rem; text-align: right; }
 
-  /* Cartel luminoso: un poco más chico */
+  /* Cartel luminoso: un poco más chico y con recorrido más corto
+     (las letras aparecen antes en pantallas angostas) */
   .led-track { font-size: 1rem; letter-spacing: 0.1em; }
+  .led-track.led-run {
+    animation: led-scroll-mobile var(--led-dur, 12s) linear, led-flicker 2.6s infinite;
+  }
+  @keyframes led-scroll-mobile {
+    from { transform: translateX(45%); }
+    to   { transform: translateX(-100%); }
+  }
 
   /* Chips de orden: 2 por fila, cómodos */
   .stats-sort-chip { flex: 1 1 calc(50% - 0.25rem); min-width: 0; padding: 0.6rem 0.5rem; font-size: 0.82rem; }
