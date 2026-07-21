@@ -1093,3 +1093,53 @@ main {
   content: " ▼";
   opacity: 1;
 }
+
+/* ===== ★ Cartel luminoso rotativo (LED sign) ★ ===== */
+.led-sign {
+  position: relative;
+  overflow: hidden;
+  margin: 0 0 1rem;
+  padding: 0.7rem 0;
+  background: linear-gradient(180deg, #c40d0d 0%, #8f0606 100%);
+  border: 2px solid #ff5252;
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: 0 0 18px rgba(255, 40, 40, 0.55), inset 0 0 22px rgba(0, 0, 0, 0.45);
+  /* patrón de "bombillas" LED */
+  background-image:
+    radial-gradient(rgba(255,255,255,0.10) 1px, transparent 1.4px),
+    linear-gradient(180deg, #c40d0d 0%, #8f0606 100%);
+  background-size: 10px 10px, 100% 100%;
+}
+.led-track {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 4px #fff,
+    0 0 10px #ffdada,
+    0 0 20px #ff5a5a,
+    0 0 32px #ff2a2a;
+  will-change: transform;
+  animation: led-flicker 2.6s infinite;
+}
+.led-track.led-run {
+  animation: led-scroll var(--led-dur, 12s) linear, led-flicker 2.6s infinite;
+}
+@keyframes led-scroll {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(-100%); }
+}
+@keyframes led-flicker {
+  0%, 100%   { opacity: 1; }
+  47%        { opacity: 1; }
+  48%        { opacity: 0.72; }
+  49%        { opacity: 1; }
+  92%        { opacity: 1; }
+  93%        { opacity: 0.6; }
+  94%        { opacity: 1; }
+}

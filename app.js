@@ -3,6 +3,15 @@
    ============================================ */
 
 // ==========================================
+// ★ CARTEL LUMINOSO — EDITA AQUÍ TUS FRASES ★
+// Agrega, saca o cambia las frases de esta lista.
+// Van rotando una tras otra en el cartel rojo.
+// ==========================================
+const BANNER_FRASES = [
+  'Gracias por el estreno (Gacela tiene hambre)',
+];
+
+// ==========================================
 // CONFIG — Reemplaza con tus datos de Supabase
 // ==========================================
 const SUPABASE_URL = 'https://xfkxpvltqtlzcazklpda.supabase.co';
@@ -1256,6 +1265,41 @@ async function loadHistory() {
 }
 
 // ==========================================
+// ★ CARTEL LUMINOSO ROTATIVO ★
+// ==========================================
+function initLedBanner() {
+  const track = document.getElementById('led-track');
+  if (!track) return;
+
+  const frases = (Array.isArray(BANNER_FRASES) && BANNER_FRASES.length)
+    ? BANNER_FRASES
+    : ['Bolsilleras ⚽'];
+  let i = 0;
+
+  function playNext() {
+    const frase = frases[i % frases.length];
+    i++;
+
+    // Velocidad según largo (más texto = más tiempo, para que se lea)
+    const dur = Math.max(9, Math.round(frase.length * 0.42));
+    track.textContent = '★  ' + frase + '  ★';
+    track.style.setProperty('--led-dur', dur + 's');
+
+    // Reiniciar la animación de scroll
+    track.classList.remove('led-run');
+    void track.offsetWidth; // fuerza reflow
+    track.classList.add('led-run');
+  }
+
+  track.addEventListener('animationend', (e) => {
+    if (e.animationName === 'led-scroll') playNext();
+  });
+
+  playNext();
+}
+
+// ==========================================
 // INIT
 // ==========================================
+initLedBanner();
 tryAutoLogin();
