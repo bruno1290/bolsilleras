@@ -179,19 +179,29 @@ async function showLoginPlayerList() {
     `;
   }
 
-  // 3. Fetch fresh players from Supabase
-  try {
-    const { data: players, error } = await sb.from('players').select('id, name').order('name');
-    if (!error && players) {
-      localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
-      renderPlayerButtons(players);
-    } else if (!hasRenderedCache) {
-      renderPlayerButtons([]);
+  // 3. Fetch fresh players from Supabase, with retries (first request on a
+  // cold connection / mobile network can fail or time out while other page
+  // assets are still loading)
+  const MAX_ATTEMPTS = 3;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const { data: players, error } = await sb.from('players').select('id, name').order('name');
+      if (!error && players) {
+        localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
+        renderPlayerButtons(players);
+        return;
+      }
+    } catch (err) {
+      console.error(`Error in showLoginPlayerList (attempt ${attempt}):`, err);
     }
-  } catch (err) {
-    console.error('Error in showLoginPlayerList:', err);
-    if (!hasRenderedCache) renderPlayerButtons([]);
+
+    if (attempt < MAX_ATTEMPTS) {
+      await new Promise(resolve => setTimeout(resolve, attempt * 500));
+    }
   }
+
+  // All attempts failed
+  if (!hasRenderedCache) renderPlayerButtons([]);
 }
 
 async function showPinInput(playerId, playerName) {
@@ -383,7 +393,13 @@ async function tryAutoLogin() {
   }
 
   showLoading();
-  const { data, error } = await sb.from('players').select('*').eq('id', savedId).single();
+  const MAX_ATTEMPTS = 3;
+  let data = null, error = null;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    ({ data, error } = await sb.from('players').select('*').eq('id', savedId).single());
+    if (!error && data) break;
+    if (attempt < MAX_ATTEMPTS) await new Promise(resolve => setTimeout(resolve, attempt * 500));
+  }
   hideLoading();
 
   if (error || !data) {
