@@ -1032,3 +1032,64 @@ main {
   .history-team-score { font-size: 1.6rem; }
   .history-players { grid-template-columns: 1fr 1fr; gap: 0.4rem; padding: 0 0.75rem 0.75rem; }
 }
+
+/* ===== Barra "Ordenar por" (Stats) ===== */
+.stats-sort-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 1rem;
+}
+.stats-sort-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.stats-sort-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.stats-sort-chip {
+  flex: 1 1 auto;
+  min-width: 84px;
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.stats-sort-chip:hover {
+  border-color: var(--yellow);
+  color: var(--text-primary);
+}
+.stats-sort-chip.active {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: #1a1a1a;
+  box-shadow: 0 0 16px var(--yellow-glow);
+}
+/* Encabezados ordenables: que se note que se pueden tocar */
+#stats-table th.sortable {
+  cursor: pointer;
+  position: relative;
+}
+#stats-table th.sortable::after {
+  content: " ⇅";
+  font-size: 0.7em;
+  opacity: 0.4;
+}
+#stats-table th.sortable.active-sort {
+  color: var(--yellow);
+}
+#stats-table th.sortable.active-sort::after {
+  content: " ▼";
+  opacity: 1;
+}

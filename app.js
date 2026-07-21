@@ -18,7 +18,7 @@ let activePichanga = null;    // Current open pichanga
 let activeSignups = [];       // Signups for active pichanga
 let mySignup = null;          // Current player's signup
 let allPlayers = [];          // All players cache
-let currentSort = 'winRate';
+let currentSort = 'goals';
 
 // ==========================================
 // UTILITY
@@ -410,8 +410,8 @@ function togglePostMatchSection() {
   const btn = document.getElementById('btn-toggle-postmatch');
   if (btn) {
     btn.textContent = isHidden
-      ? '▲ Ocultar reporte de equipo y goles'
-      : '📝 Reportar mi Equipo y Goles (Post-Partido)';
+      ? '▲ Ocultar'
+      : '📝 Reportar mi Equipo y Goles';
   }
 }
 
@@ -506,8 +506,9 @@ navBtns.forEach(btn => {
 // PICHANGA TAB
 // ==========================================
 async function loadActivePichanga() {
-  // Find the latest open pichanga
-  const { data, error } = await sb
+  // Buscar pichanga abierta; si no hay, mostrar la última cerrada
+  // para permitir reporte tardío de equipo y goles (no bloquea nada).
+  let { data, error } = await sb
     .from('pichangas')
     .select('*')
     .eq('status', 'open')
@@ -517,6 +518,20 @@ async function loadActivePichanga() {
   if (error) {
     showToast('Error cargando pichanga', 'error');
     return;
+  }
+
+  if (!data || data.length === 0) {
+    ({ data, error } = await sb
+      .from('pichangas')
+      .select('*')
+      .eq('status', 'closed')
+      .order('created_at', { ascending: false })
+      .limit(1));
+
+    if (error) {
+      showToast('Error cargando pichanga', 'error');
+      return;
+    }
   }
 
   if (!data || data.length === 0) {
@@ -567,104 +582,76 @@ function renderPichanga() {
   const dateStr = fecha.toLocaleDateString('es-CL', {
     weekday: 'long', day: 'numeric', month: 'long'
   });
+  const dateEl = document.getElementById('pichanga-date');
+  if (dateEl) dateEl.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
   // Venue & Cost
   const venueEl = document.getElementById('pichanga-venue');
   const costEl = document.getElementById('pichanga-cost');
   if (venueEl) venueEl.textContent = activePichanga.sede || 'Zapping Center';
   if (costEl) costEl.textContent = '$' + (activePichanga.costo_por_cabeza || 2500).toLocaleString('es-CL');
 
-  // Status badge
+  // Status badge (si está cerrada, mostrar el resultado declarado por el admin)
   const statusBadge = document.getElementById('pichanga-status-badge');
   const isOpen = activePichanga.status === 'open';
-  statusBadge.textContent = isOpen ? 'Abierta' : 'Cerrada';
+  if (isOpen) {
+    statusBadge.textContent = 'Abierta';
+  } else {
+    const sBl = activePichanga.score_blanco;
+    const sCol = activePichanga.score_color;
+    if (sBl === null || sCol === null) {
+      statusBadge.textContent = 'Cerrada — Resultado pendiente ⏳';
+    } else {
+      const resultado = sBl === sCol ? 'Empate 🤝' : (sBl > sCol ? 'Ganó ⬜ Blanco' : 'Ganó 🎨 Color');
+      statusBadge.textContent = `Cerrada — ${resultado}`;
+    }
+  }
   statusBadge.className = `pichanga-status ${isOpen ? 'status-open' : 'status-closed'}`;
 
-  // Live scores
-  const blancoGoals = activeSignups
-    .filter(s => s.team === 'blanco')
-    .reduce((sum, s) => sum + (s.goals || 0), 0);
-  const colorGoals = activeSignups
-    .filter(s => s.team === 'color')
-    .reduce((sum, s) => sum + (s.goals || 0), 0);
-  document.getElementById('live-score-blanco').textContent = blancoGoals;
-  document.getElementById('live-score-color').textContent = colorGoals;
+  // Player counts per team (ya no se registran goles)
+  const blancoTeamCount = activeSignups.filter(s => s.team === 'blanco').length;
+  const colorTeamCount = activeSignups.filter(s => s.team === 'color').length;
+  const lsb = document.getElementById('live-score-blanco');
+  if (lsb) lsb.textContent = blancoTeamCount;
+  const lsc = document.getElementById('live-score-color');
+  if (lsc) lsc.textContent = colorTeamCount;
 
-  // My controls
+  // My controls — SIEMPRE visibles, aunque esté cerrada:
+  // el reporte tardío de equipo/goles no se bloquea y las stats se
+  // recalculan solas con cada cambio.
   const controlsEl = document.getElementById('my-controls');
   const signupPrompt = document.getElementById('signup-prompt');
   const signupControls = document.getElementById('signup-controls');
 
-  if (!isOpen) {
-    controlsEl.style.display = 'none';
+  controlsEl.style.display = 'block';
+
+  if (!mySignup) {
+    signupPrompt.style.display = 'block';
+    signupControls.style.display = 'none';
+    const sb2 = document.getElementById('btn-signup');
+    if (sb2) sb2.textContent = isOpen ? '🙋 ¡Me anoto!' : '🙋 Yo jugué (anotarme y reportar)';
   } else {
-    controlsEl.style.display = 'block';
+    signupPrompt.style.display = 'none';
+    signupControls.style.display = 'block';
 
-    if (!mySignup) {
-      signupPrompt.style.display = 'block';
-      signupControls.style.display = 'none';
-    } else {
-      signupPrompt.style.display = 'none';
-      signupControls.style.display = 'block';
+    // Team picker
+    const pb = document.getElementById('pick-blanco');
+    if (pb) pb.classList.toggle('active-team', mySignup.team === 'blanco');
+    const pc = document.getElementById('pick-color');
+    if (pc) pc.classList.toggle('active-team', mySignup.team === 'color');
 
-      // Team picker
-      const pb = document.getElementById('pick-blanco');
-      if (pb) pb.classList.toggle('active-team', mySignup.team === 'blanco');
-      const pc = document.getElementById('pick-color');
-      if (pc) pc.classList.toggle('active-team', mySignup.team === 'color');
-
-      // Goals & Assists
-      const mg = document.getElementById('my-goals');
-      if (mg) mg.textContent = mySignup.goals || 0;
-      const ma = document.getElementById('my-assists');
-      if (ma) ma.textContent = mySignup.assists || 0;
-    }
+    // Goles del jugador
+    const mg = document.getElementById('my-goals');
+    if (mg) mg.textContent = mySignup.goals || 0;
   }
 
-  // Signups list
-  const blancoPlayers = activeSignups.filter(s => s.team === 'blanco');
-  const colorPlayers = activeSignups.filter(s => s.team === 'color');
-  const noTeamPlayers = activeSignups.filter(s => !s.team);
+  // Total de anotados (el detalle de convocados vive en la pestaña Pichangas)
+  const scEl = document.getElementById('signup-count');
+  if (scEl) scEl.textContent = activeSignups.length;
 
-  document.getElementById('signup-count').textContent = activeSignups.length;
-  document.getElementById('blanco-count').textContent = blancoPlayers.length;
-  document.getElementById('color-count').textContent = colorPlayers.length;
-
-  document.getElementById('signups-blanco').innerHTML = blancoPlayers.map(s => `
-    <div class="signup-player-chip">
-      <span>${escapeHtml(s.players?.name || '???')}</span>
-      <div>
-        ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
-        ${s.assists > 0 ? `<span class="signup-player-goals" style="color:var(--draw-color);margin-left:0.2rem;">${s.assists}🅰️</span>` : ''}
-      </div>
-    </div>
-  `).join('') || '<div style="padding:0.5rem;font-size:0.7rem;color:var(--text-muted);">—</div>';
-
-  document.getElementById('signups-color').innerHTML = colorPlayers.map(s => `
-    <div class="signup-player-chip">
-      <span>${escapeHtml(s.players?.name || '???')}</span>
-      <div>
-        ${s.goals > 0 ? `<span class="signup-player-goals">${s.goals}⚽</span>` : ''}
-        ${s.assists > 0 ? `<span class="signup-player-goals" style="color:var(--draw-color);margin-left:0.2rem;">${s.assists}🅰️</span>` : ''}
-      </div>
-    </div>
-  `).join('') || '<div style="padding:0.5rem;font-size:0.7rem;color:var(--text-muted);">—</div>';
-
-  const noTeamEl = document.getElementById('signups-no-team');
-  if (noTeamPlayers.length > 0) {
-    noTeamEl.innerHTML = `
-      <div class="signups-no-team-label">Sin equipo:</div>
-      ${noTeamPlayers.map(s => `<span class="no-team-chip">${escapeHtml(s.players?.name || '???')}</span>`).join('')}
-    `;
-  } else {
-    noTeamEl.innerHTML = '';
-  }
-
-  // Admin controls visibility
-  if (currentPlayer.is_admin && isOpen) {
-    document.getElementById('admin-pichanga-controls').style.display = 'flex';
-  } else {
-    document.getElementById('admin-pichanga-controls').style.display = 'none';
-  }
+  // Admin controls: solo con pichanga abierta. El resultado se edita
+  // exclusivamente en la pestaña Pichangas.
+  const adminPanel = document.getElementById('admin-pichanga-controls');
+  adminPanel.style.display = (checkIsAdmin(currentPlayer) && isOpen) ? 'flex' : 'none';
 }
 
 // --- Signup Actions ---
@@ -753,7 +740,8 @@ async function selectTeam(team) {
   showToast(team === 'blanco' ? '⬜ Equipo Blanco' : '🎨 Equipo Color');
 }
 
-// Goals
+// Goles del jugador (las asistencias se eliminaron; el ganador NO se
+// calcula de los goles — lo define el Admin).
 const btnGoalPlusEl = document.getElementById('btn-goal-plus');
 if (btnGoalPlusEl) btnGoalPlusEl.addEventListener('click', () => updateGoals(1));
 
@@ -787,43 +775,6 @@ async function updateGoals(delta) {
   mySignup.goals = newGoals;
   const idx = activeSignups.findIndex(s => s.id === mySignup.id);
   if (idx >= 0) activeSignups[idx].goals = newGoals;
-  renderPichanga();
-}
-
-// Assists
-const btnAssistPlusEl = document.getElementById('btn-assist-plus');
-if (btnAssistPlusEl) btnAssistPlusEl.addEventListener('click', () => updateAssists(1));
-
-const btnAssistMinusEl = document.getElementById('btn-assist-minus');
-if (btnAssistMinusEl) btnAssistMinusEl.addEventListener('click', () => updateAssists(-1));
-
-async function updateAssists(delta) {
-  if (!mySignup) {
-    showToast('Debes estar anotado para sumar asistencias', 'error');
-    return;
-  }
-  const newAssists = Math.max(0, (mySignup.assists || 0) + delta);
-
-  const { data, error } = await sb.from('signups')
-    .update({ assists: newAssists })
-    .eq('id', mySignup.id)
-    .select();
-
-  if (error) {
-    showToast('Error al actualizar asistencias', 'error');
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    showToast('Inscripción no encontrada. Recargando...', 'error');
-    await loadSignups();
-    renderPichanga();
-    return;
-  }
-
-  mySignup.assists = newAssists;
-  const idx = activeSignups.findIndex(s => s.id === mySignup.id);
-  if (idx >= 0) activeSignups[idx].assists = newAssists;
   renderPichanga();
 }
 
@@ -894,29 +845,22 @@ if (btnConfirmCreateEl) {
   });
 }
 
+// Target del modal de ganador (solo se abre desde la pestaña Pichangas)
+let winnerTarget = null; // { id }
+
+// Cerrar pichanga: SOLO cierra. El resultado queda pendiente y el admin
+// lo define después en la pestaña Pichangas con "Editar resultado".
 const btnClosePichangaEl = document.getElementById('btn-close-pichanga');
 if (btnClosePichangaEl) {
   btnClosePichangaEl.addEventListener('click', async () => {
-    if (!currentPlayer?.is_admin || !activePichanga) return;
+    if (!checkIsAdmin(currentPlayer) || !activePichanga) return;
 
-    const confirmed = await showModal('Cerrar pichanga', '¿Seguro? Se calcularán los resultados finales.');
+    const confirmed = await showModal('Cerrar pichanga', 'Se cierra la pichanga. El resultado lo defines después en la pestaña Pichangas (los jugadores igual pueden seguir reportando).');
     if (!confirmed) return;
-
-    // Calculate final scores
-    const scoreBl = activeSignups
-      .filter(s => s.team === 'blanco')
-      .reduce((sum, s) => sum + (s.goals || 0), 0);
-    const scoreCol = activeSignups
-      .filter(s => s.team === 'color')
-      .reduce((sum, s) => sum + (s.goals || 0), 0);
 
     showLoading();
     const { error } = await sb.from('pichangas')
-      .update({
-        status: 'closed',
-        score_blanco: scoreBl,
-        score_color: scoreCol
-      })
+      .update({ status: 'closed', score_blanco: null, score_color: null })
       .eq('id', activePichanga.id);
     hideLoading();
 
@@ -925,13 +869,59 @@ if (btnClosePichangaEl) {
       return;
     }
 
-    showToast(`Pichanga cerrada: Blanco ${scoreBl} - ${scoreCol} Color 🏁`);
-    activePichanga = null;
-    activeSignups = [];
-    mySignup = null;
+    showToast('Pichanga cerrada 🏁 Define el ganador en 📋 Pichangas');
     loadActivePichanga();
   });
 }
+
+function closeWinnerModal() {
+  const modal = document.getElementById('modal-winner');
+  if (modal) modal.style.display = 'none';
+}
+
+const btnCancelWinnerEl = document.getElementById('btn-cancel-winner');
+if (btnCancelWinnerEl) btnCancelWinnerEl.addEventListener('click', closeWinnerModal);
+
+// El equipo ganador se guarda en score_blanco/score_color (1-0, 0-1 o 1-1 empate)
+// para no tener que migrar la base de datos. Se usa SOLO desde la pestaña
+// Pichangas ("Editar resultado"). Al elegir ganador, la victoria se cuenta
+// automáticamente a los jugadores de ese equipo.
+async function declararGanador(winner) {
+  if (!checkIsAdmin(currentPlayer) || !winnerTarget) return;
+
+  let scoreBl = 0, scoreCol = 0;
+  if (winner === 'blanco') { scoreBl = 1; scoreCol = 0; }
+  else if (winner === 'color') { scoreBl = 0; scoreCol = 1; }
+  else { scoreBl = 1; scoreCol = 1; } // empate
+
+  const { id } = winnerTarget;
+  closeWinnerModal();
+  showLoading();
+  const { error } = await sb.from('pichangas')
+    .update({ status: 'closed', score_blanco: scoreBl, score_color: scoreCol })
+    .eq('id', id);
+  hideLoading();
+
+  if (error) {
+    showToast('Error al guardar resultado', 'error');
+    return;
+  }
+
+  const txt = winner === 'empate' ? 'Empate 🤝' : (winner === 'blanco' ? 'Ganó ⬜ Blanco' : 'Ganó 🎨 Color');
+  winnerTarget = null;
+  showToast(`Resultado guardado — ${txt} 🏆`);
+  loadHistory();
+  loadActivePichanga();
+}
+
+const btnWinnerBlancoEl = document.getElementById('btn-winner-blanco');
+if (btnWinnerBlancoEl) btnWinnerBlancoEl.addEventListener('click', () => declararGanador('blanco'));
+
+const btnWinnerColorEl = document.getElementById('btn-winner-color');
+if (btnWinnerColorEl) btnWinnerColorEl.addEventListener('click', () => declararGanador('color'));
+
+const btnWinnerEmpateEl = document.getElementById('btn-winner-empate');
+if (btnWinnerEmpateEl) btnWinnerEmpateEl.addEventListener('click', () => declararGanador('empate'));
 
 const btnDeletePichangaEl = document.getElementById('btn-delete-pichanga');
 if (btnDeletePichangaEl) {
@@ -999,13 +989,18 @@ async function loadStats() {
     const table = document.getElementById('stats-table');
     const empty = document.getElementById('stats-empty');
 
+    function toggleTables(show) {
+      if (table) table.style.display = show ? 'table' : 'none';
+      if (empty) empty.style.display = show ? 'none' : 'block';
+    }
+
     if (!pichangas || pichangas.length === 0) {
       document.getElementById('total-matches').textContent = '0';
-      document.getElementById('total-goals').textContent = '0';
+      const tg0 = document.getElementById('total-goals');
+      if (tg0) tg0.textContent = '0';
       const spentEl = document.getElementById('total-spent');
       if (spentEl) spentEl.textContent = '$0';
-      if (table) table.style.display = 'none';
-      if (empty) empty.style.display = 'block';
+      toggleTables(false);
       return;
     }
 
@@ -1015,8 +1010,7 @@ async function loadStats() {
       .in('pichanga_id', pichangas.map(p => p.id));
 
     if (sError || !signups || signups.length === 0) {
-      if (table) table.style.display = 'none';
-      if (empty) empty.style.display = 'block';
+      toggleTables(false);
       return;
     }
 
@@ -1044,7 +1038,9 @@ async function loadStats() {
     const cost = pich ? (pich.costo_por_cabeza || 2500) : 2500;
     ps.totalSpent += cost;
 
-    if (pich && s.team) {
+    // Victorias/derrotas solo si el admin ya definió el resultado
+    const hasResult = pich && pich.score_blanco !== null && pich.score_color !== null;
+    if (hasResult && s.team) {
       const isDraw = pich.score_blanco === pich.score_color;
       if (isDraw) {
         ps.draws++;
@@ -1057,12 +1053,13 @@ async function loadStats() {
     }
   });
 
-  // Summary
-  const totalGoals = pichangas.reduce((sum, p) => sum + (p.score_blanco || 0) + (p.score_color || 0), 0);
+  // Summary — total de goles reportados por los jugadores (no el marcador del admin)
+  const totalGoals = Object.values(playerStats).reduce((sum, ps) => sum + ps.goals, 0);
   const grandTotalSpent = Object.values(playerStats).reduce((sum, ps) => sum + ps.totalSpent, 0);
 
   document.getElementById('total-matches').textContent = pichangas.length;
-  document.getElementById('total-goals').textContent = totalGoals;
+  const tgEl = document.getElementById('total-goals');
+  if (tgEl) tgEl.textContent = totalGoals;
   const spentEl = document.getElementById('total-spent');
   if (spentEl) spentEl.textContent = '$' + grandTotalSpent.toLocaleString('es-CL');
 
@@ -1076,23 +1073,17 @@ async function loadStats() {
   const tbody = document.getElementById('stats-body');
 
   if (rows.length === 0) {
-    if (table) table.style.display = 'none';
-    if (empty) empty.style.display = 'block';
+    toggleTables(false);
     return;
   }
 
-  if (table) table.style.display = 'table';
-  if (empty) empty.style.display = 'none';
+  toggleTables(true);
 
-  // Sort
+  // Ordenar por la columna seleccionada (PJ, Victorias, Derrotas o Goles)
   rows.sort((a, b) => {
     const diff = b[currentSort] - a[currentSort];
     if (diff !== 0) return diff;
-    if (currentSort !== 'winRate') {
-      const wrDiff = b.winRate - a.winRate;
-      if (wrDiff !== 0) return wrDiff;
-    }
-    return b.goals - a.goals;
+    return b.wins - a.wins;
   });
 
   tbody.innerHTML = rows.map((r, i) => {
@@ -1103,23 +1094,29 @@ async function loadStats() {
       <tr>
         <td><span class="player-rank ${rankClass}">${medal || rank}</span></td>
         <td class="td-name">${escapeHtml(r.name)}</td>
-        <td>${r.matches}</td>
+        <td style="font-weight:800;">${r.matches}</td>
         <td class="td-wins">${r.wins}</td>
-        <td class="td-draws">${r.draws}</td>
         <td class="td-losses">${r.losses}</td>
-        <td class="td-winrate">${r.winRate}%</td>
         <td class="td-goals">${r.goals}</td>
-        <td>${r.assists}</td>
         <td style="color:var(--yellow);font-weight:700;">$${r.totalSpent.toLocaleString('es-CL')}</td>
       </tr>
     `;
   }).join('');
 
-  // Sorting headers
+  // Encabezados ordenables
   document.querySelectorAll('#stats-table th.sortable').forEach(th => {
     th.classList.toggle('active-sort', th.dataset.sort === currentSort);
     th.onclick = () => {
       currentSort = th.dataset.sort;
+      loadStats();
+    };
+  });
+
+  // Chips "Ordenar por" (arriba de la tabla)
+  document.querySelectorAll('.stats-sort-chip').forEach(chip => {
+    chip.classList.toggle('active', chip.dataset.sort === currentSort);
+    chip.onclick = () => {
+      currentSort = chip.dataset.sort;
       loadStats();
     };
   });
@@ -1163,10 +1160,11 @@ async function loadHistory() {
       weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
     });
 
-    const isDraw = m.score_blanco === m.score_color;
-    const blancoWins = m.score_blanco > m.score_color;
-    const scoreClassBl = isDraw ? 'draw' : (blancoWins ? 'winner' : 'loser');
-    const scoreClassCol = isDraw ? 'draw' : (blancoWins ? 'loser' : 'winner');
+    const hasResult = m.score_blanco !== null && m.score_color !== null;
+    const isDraw = hasResult && m.score_blanco === m.score_color;
+    const blancoWins = hasResult && m.score_blanco > m.score_color;
+    const scoreClassBl = !hasResult ? 'draw' : (isDraw ? 'draw' : (blancoWins ? 'winner' : 'loser'));
+    const scoreClassCol = !hasResult ? 'draw' : (isDraw ? 'draw' : (blancoWins ? 'loser' : 'winner'));
 
     const mSignups = (allSignups || []).filter(s => s.pichanga_id === m.id);
     const blancoPlayers = mSignups.filter(s => s.team === 'blanco');
@@ -1184,11 +1182,16 @@ async function loadHistory() {
       return `${escapeHtml(s.players?.name || '???')}${goalStr}`;
     }).join('<br>') || '<span style="color:var(--text-muted)">—</span>';
 
+    // Resultado (lo define el admin; mientras tanto queda pendiente)
+    const resultBl = !hasResult ? '⏳ Pendiente' : (isDraw ? '🤝 Empate' : (blancoWins ? '🏆 Ganó' : 'Perdió'));
+    const resultCol = !hasResult ? '⏳ Pendiente' : (isDraw ? '🤝 Empate' : (blancoWins ? 'Perdió' : '🏆 Ganó'));
+
     const sedeName = m.sede || 'Zapping Center';
     const costoVal = '$' + (m.costo_por_cabeza || 2500).toLocaleString('es-CL');
 
     const adminDeleteHtml = checkIsAdmin(currentPlayer) ? `
-      <div class="history-delete-container">
+      <div class="history-delete-container" style="display:flex; gap:0.5rem; justify-content:flex-end; flex-wrap:wrap;">
+        <button class="btn-edit-winner" data-id="${m.id}" style="background:rgba(245,197,24,0.12); color:var(--yellow); border:1px solid rgba(245,197,24,0.4); border-radius:var(--radius-md); padding:0.35rem 0.7rem; font-size:0.75rem; font-weight:700; cursor:pointer;">✏️ Editar resultado</button>
         <button class="btn-delete-match" data-id="${m.id}">🗑️ Eliminar</button>
       </div>
     ` : '';
@@ -1197,17 +1200,17 @@ async function loadHistory() {
       <div class="history-card" data-id="${m.id}">
         <div class="history-card-header">
           <span class="history-date">📍 <strong>${escapeHtml(sedeName)}</strong> · ${dateStr}</span>
-          <span style="font-size:0.75rem; font-weight:700; color:var(--yellow);">${costoVal} / jug.</span>
+          <span style="font-size:0.75rem; font-weight:700; color:var(--yellow);">👥 ${mSignups.length} · ${costoVal} / jug.</span>
         </div>
         <div class="history-score-row">
           <div class="history-team">
             <div class="history-team-label">⬜ Blanco</div>
-            <div class="history-team-score ${scoreClassBl}">${m.score_blanco}</div>
+            <div class="history-team-score ${scoreClassBl}" style="font-size:0.9rem;">${resultBl}</div>
           </div>
           <span class="history-vs">VS</span>
           <div class="history-team">
             <div class="history-team-label">🎨 Color</div>
-            <div class="history-team-score ${scoreClassCol}">${m.score_color}</div>
+            <div class="history-team-score ${scoreClassCol}" style="font-size:0.9rem;">${resultCol}</div>
           </div>
         </div>
         <div class="history-players">
@@ -1218,6 +1221,18 @@ async function loadHistory() {
       </div>
     `;
   }).join('');
+
+  // Edit winner handlers (admin only)
+  container.querySelectorAll('.btn-edit-winner').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!checkIsAdmin(currentPlayer)) return;
+      winnerTarget = { id: btn.dataset.id, mode: 'edit' };
+      const warnEl = document.getElementById('winner-team-warning');
+      if (warnEl) warnEl.style.display = 'none';
+      const modal = document.getElementById('modal-winner');
+      if (modal) modal.style.display = 'flex';
+    });
+  });
 
   // Delete handlers (admin only)
   container.querySelectorAll('.btn-delete-match').forEach(btn => {

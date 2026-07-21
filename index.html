@@ -86,15 +86,15 @@
     <nav id="main-nav">
       <button class="nav-btn active" data-tab="pichanga" id="nav-pichanga">
         <span class="nav-icon">⚽</span>
-        <span class="nav-label">Pichanga</span>
+        <span class="nav-label">Registro</span>
       </button>
       <button class="nav-btn" data-tab="stats" id="nav-stats">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">Estadísticas</span>
+        <span class="nav-icon">🧊</span>
+        <span class="nav-label">Stats</span>
       </button>
       <button class="nav-btn" data-tab="history" id="nav-history">
         <span class="nav-icon">📋</span>
-        <span class="nav-label">Historial</span>
+        <span class="nav-label">Pichangas</span>
       </button>
     </nav>
 
@@ -140,9 +140,9 @@
                 <h2 class="pichanga-date" id="pichanga-date"></h2>
                 <span class="pichanga-status" id="pichanga-status-badge"></span>
               </div>
-              <div class="pichanga-score-mini" id="pichanga-score-mini">
+              <div class="pichanga-score-mini" id="pichanga-score-mini" title="Jugadores por equipo">
                 <span class="score-team-mini score-blanco-mini">⬜ <strong id="live-score-blanco">0</strong></span>
-                <span class="score-vs-mini">-</span>
+                <span class="score-vs-mini">vs</span>
                 <span class="score-team-mini score-color-mini"><strong id="live-score-color">0</strong> 🎨</span>
               </div>
             </div>
@@ -150,7 +150,7 @@
             <!-- Post-match Notice -->
             <div class="match-notice">
               <span class="notice-icon">📢</span>
-              <span><strong>¡Atención Convocados!</strong> Al finalizar la pichanga, cada jugador deberá ingresar a esta app desde su celular para seleccionar su equipo y anotar sus goles.</span>
+              <span><strong>¡Atención Convocados!</strong> Al finalizar la pichanga, cada jugador deberá ingresar a esta app desde su celular para seleccionar en qué equipo jugó (⬜ Blanco o 🎨 Color) y cuántos goles anotó. El equipo ganador lo define el Admin.</span>
             </div>
 
             <!-- My controls (only if pichanga is open) -->
@@ -166,7 +166,7 @@
 
                 <!-- Post-Match Reporting Button -->
                 <button class="btn btn-secondary btn-lg" id="btn-toggle-postmatch" onclick="togglePostMatchSection()" style="margin-bottom:0.75rem;">
-                  📝 Reportar mi Equipo y Goles (Post-Partido)
+                  📝 Reportar mi Equipo y Goles
                 </button>
 
                 <button class="btn btn-secondary btn-sm" id="btn-cancel-signup" style="margin-bottom:0.75rem; background:rgba(239, 68, 68, 0.15); color:#fca5a5; border:1px solid rgba(239, 68, 68, 0.3);">
@@ -175,11 +175,6 @@
 
                 <!-- Post-match section (hidden by default until clicked) -->
                 <div id="postmatch-section" style="display:none; padding:1rem; background:rgba(0,0,0,0.2); border-radius:var(--radius-lg); margin-bottom:1rem;">
-                  <!-- Disclaimer -->
-                  <div class="moral-disclaimer" style="margin-bottom:0.85rem; padding:0.6rem 0.85rem; background:rgba(248, 113, 113, 0.15); border:1px solid rgba(248, 113, 113, 0.4); border-radius:var(--radius-md); color:#fca5a5; font-size:0.8rem; font-weight:700; text-align:center;">
-                    ⚠️ Por favor sé moral ctm (no te inventes goles ni asistencias)
-                  </div>
-
                   <!-- Team picker -->
                   <div class="team-picker">
                     <h4>¿En qué equipo jugaste?</h4>
@@ -205,39 +200,14 @@
                     </div>
                   </div>
 
-                  <!-- Assists counter -->
-                  <div class="goals-counter" style="margin-top:0.75rem;">
-                    <h4>Tus asistencias 🅰️</h4>
-                    <div class="goals-input-group">
-                      <button class="btn-goal-adjust" id="btn-assist-minus">−</button>
-                      <span class="goals-display" id="my-assists">0</span>
-                      <button class="btn-goal-adjust" id="btn-assist-plus">+</button>
-                    </div>
-                  </div>
+                  <p style="margin-top:0.75rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">Marca tu equipo y tus goles. Quién gana lo define el Admin. 👑</p>
                 </div>
               </div>
             </div>
 
-            <!-- Signups list -->
-            <div class="signups-section">
-              <h3 class="signups-title">📋 Convocados para el Partido <span class="signup-count" id="signup-count">0</span></h3>
-              <div class="signups-teams">
-                <div class="signups-team-col">
-                  <div class="signups-team-header signups-blanco-header">
-                    <span>⬜ Blanco</span>
-                    <span class="signups-team-count" id="blanco-count">0</span>
-                  </div>
-                  <div class="signups-team-list" id="signups-blanco"></div>
-                </div>
-                <div class="signups-team-col">
-                  <div class="signups-team-header signups-color-header">
-                    <span>🎨 Color</span>
-                    <span class="signups-team-count" id="color-count">0</span>
-                  </div>
-                  <div class="signups-team-list" id="signups-color"></div>
-                </div>
-              </div>
-              <div id="signups-no-team" class="signups-no-team"></div>
+            <!-- Total anotados (el detalle de convocados está en la pestaña Pichangas) -->
+            <div style="padding:0.6rem 1rem; text-align:center; font-size:0.8rem; color:var(--text-muted);">
+              🙋 Anotados: <strong id="signup-count" style="color:var(--text-primary);">0</strong> · El detalle de convocados aparece en la pestaña 📋 Pichangas al cerrar.
             </div>
 
             <!-- Dedicated Admin Panel (Admin-Only, Gacela) -->
@@ -245,9 +215,9 @@
               <div style="font-size:0.75rem; font-weight:800; color:var(--yellow); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.4rem; display:flex; align-items:center; gap:0.4rem;">
                 <span>👑</span> <span>Panel de Control Admin (Exclusivo Gacela)</span>
               </div>
-              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.75rem;">Una vez finalizado el partido y que todos reporten sus goles, cierra la pichanga para actualizar las estadísticas oficiales.</p>
+              <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.75rem;">Cierra la pichanga cuando quieras — no bloquea nada. El equipo ganador lo defines después en la pestaña 📋 Pichangas con ✏️ Editar resultado.</p>
               <div style="display:flex; gap:0.5rem; align-items:center; justify-content:space-between; flex-wrap:wrap;">
-                <button class="btn btn-primary" id="btn-close-pichanga">🏁 Finalizar y Cerrar Pichanga</button>
+                <button class="btn btn-primary" id="btn-close-pichanga">🏁 Cerrar Pichanga</button>
                 <button class="btn btn-ghost btn-sm" id="btn-delete-pichanga" style="color:var(--danger);">🗑️ Eliminar</button>
               </div>
             </div>
@@ -258,7 +228,7 @@
       <!-- ========== STATS TAB ========== -->
       <section id="tab-stats" class="tab-content">
         <div class="section-header">
-          <h2>Tabla de Posiciones</h2>
+          <h2>Stats 🧊</h2>
           <p class="section-subtitle">Ranking general de los Bolsilleros</p>
         </div>
 
@@ -277,17 +247,28 @@
           </div>
         </div>
 
+        <!-- Ordenar por (visible, sin tener que adivinar) -->
+        <div class="stats-sort-bar">
+          <span class="stats-sort-label">Ordenar por:</span>
+          <div class="stats-sort-chips">
+            <button class="stats-sort-chip active" data-sort="goals">⚽ Goles</button>
+            <button class="stats-sort-chip" data-sort="matches">🏃 PJ</button>
+            <button class="stats-sort-chip" data-sort="wins">🏆 Victorias</button>
+            <button class="stats-sort-chip" data-sort="losses">❌ Derrotas</button>
+          </div>
+        </div>
+
         <div class="table-container">
           <table id="stats-table">
             <thead>
               <tr>
                 <th class="th-rank">#</th>
                 <th class="th-name">Jugador</th>
-                <th class="th-stat sortable active-sort" data-sort="matches">Pichangas</th>
-                <th class="th-stat sortable" data-sort="wins">Victorias</th>
-                <th class="th-stat sortable" data-sort="losses">Derrotas</th>
-                <th class="th-stat sortable" data-sort="goals">Goles</th>
-                <th class="th-stat sortable" data-sort="totalSpent">Gasto Total</th>
+                <th class="th-stat sortable" data-sort="matches">PJ</th>
+                <th class="th-stat sortable" data-sort="wins">Vict.</th>
+                <th class="th-stat sortable" data-sort="losses">Der.</th>
+                <th class="th-stat sortable active-sort" data-sort="goals">Goles</th>
+                <th class="th-stat sortable" data-sort="totalSpent">Gasto</th>
               </tr>
             </thead>
             <tbody id="stats-body"></tbody>
@@ -303,8 +284,8 @@
       <!-- ========== HISTORY TAB ========== -->
       <section id="tab-history" class="tab-content">
         <div class="section-header">
-          <h2>Historial</h2>
-          <p class="section-subtitle">Todas las pichangas jugadas</p>
+          <h2>Pichangas</h2>
+          <p class="section-subtitle">Todas las pichangas jugadas: resultado y convocados</p>
         </div>
         <div id="history-list" class="history-list"></div>
         <div class="empty-state" id="history-empty">
@@ -363,12 +344,29 @@
     </div>
   </div>
 
+  <!-- Winner Declaration Modal (Admin only) -->
+  <div class="modal-overlay" id="modal-winner" style="display:none;">
+    <div class="modal">
+      <h3>🏆 ¿Qué equipo ganó?</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.25rem;">Tú declaras el resultado. Se sumará una victoria a los jugadores del equipo ganador y una derrota a los del otro.</p>
+      <div id="winner-team-warning" style="display:none; font-size:0.78rem; color:#fca5a5; margin-bottom:0.5rem;"></div>
+      <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:1rem;">
+        <button class="btn btn-lg" id="btn-winner-blanco" style="background:#e8e8e8; color:#111; font-weight:800;">⬜ Ganó Blanco</button>
+        <button class="btn btn-lg" id="btn-winner-color" style="background:linear-gradient(90deg,#ef4444,#3b82f6); color:#fff; font-weight:800;">🎨 Ganó Color</button>
+        <button class="btn btn-secondary btn-lg" id="btn-winner-empate">🤝 Empate</button>
+      </div>
+      <div class="modal-actions" style="margin-top:1rem;">
+        <button class="btn btn-ghost" id="btn-cancel-winner">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading -->
   <div class="loading-overlay" id="loading-overlay" style="display:none;">
     <div class="loading-spinner"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=3"></script>
+  <script src="app.js?v=9"></script>
 </body>
 </html>
