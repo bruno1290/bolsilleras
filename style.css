@@ -1143,3 +1143,11 @@ main {
   93%        { opacity: 0.6; }
   94%        { opacity: 1; }
 }
+
+/* ===== Resultado grande (reemplaza el contador N vs N) ===== */
+.pichanga-winner-big {
+  font-size: 1.3rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}

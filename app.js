@@ -616,13 +616,22 @@ function renderPichanga() {
   }
   statusBadge.className = `pichanga-status ${isOpen ? 'status-open' : 'status-closed'}`;
 
-  // Player counts per team (ya no se registran goles)
-  const blancoTeamCount = activeSignups.filter(s => s.team === 'blanco').length;
-  const colorTeamCount = activeSignups.filter(s => s.team === 'color').length;
-  const lsb = document.getElementById('live-score-blanco');
-  if (lsb) lsb.textContent = blancoTeamCount;
-  const lsc = document.getElementById('live-score-color');
-  if (lsc) lsc.textContent = colorTeamCount;
+  // Resultado grande: solo cuando el admin ya definió el ganador
+  const winnerBigEl = document.getElementById('pichanga-winner-big');
+  if (winnerBigEl) {
+    const sBl = activePichanga.score_blanco;
+    const sCol = activePichanga.score_color;
+    if (!isOpen && sBl !== null && sCol !== null) {
+      let texto;
+      if (sBl === sCol) texto = '🤝 Empate';
+      else if (sBl > sCol) texto = 'Ganó ⬜ Blanco';
+      else texto = 'Ganó 🎨 Color';
+      winnerBigEl.textContent = texto;
+      winnerBigEl.style.display = 'block';
+    } else {
+      winnerBigEl.style.display = 'none';
+    }
+  }
 
   // My controls — SIEMPRE visibles, aunque esté cerrada:
   // el reporte tardío de equipo/goles no se bloquea y las stats se
