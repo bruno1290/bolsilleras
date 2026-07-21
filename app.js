@@ -76,14 +76,23 @@ function showModal(title, message) {
     document.getElementById('modal-overlay').style.display = 'flex';
   });
 }
-document.getElementById('modal-cancel').addEventListener('click', () => {
-  document.getElementById('modal-overlay').style.display = 'none';
-  if (modalResolve) modalResolve(false);
-});
-document.getElementById('modal-confirm').addEventListener('click', () => {
-  document.getElementById('modal-overlay').style.display = 'none';
-  if (modalResolve) modalResolve(true);
-});
+const modalCancelEl = document.getElementById('modal-cancel');
+if (modalCancelEl) {
+  modalCancelEl.addEventListener('click', () => {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    if (modalResolve) modalResolve(false);
+  });
+}
+
+const modalConfirmEl = document.getElementById('modal-confirm');
+if (modalConfirmEl) {
+  modalConfirmEl.addEventListener('click', () => {
+    const overlay = document.getElementById('modal-overlay');
+    if (overlay) overlay.style.display = 'none';
+    if (modalResolve) modalResolve(true);
+  });
+}
 
 // ==========================================
 // AUTH / SESSION (localStorage for session)
@@ -240,16 +249,22 @@ async function showPinInput(playerId, playerName) {
 }
 
 // PIN login / Setup handler
-document.getElementById('btn-login-pin').addEventListener('click', loginWithPin);
-document.getElementById('login-pin').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') loginWithPin();
-});
+const btnLoginPinEl = document.getElementById('btn-login-pin');
+if (btnLoginPinEl) btnLoginPinEl.addEventListener('click', loginWithPin);
+
+const loginPinEl = document.getElementById('login-pin');
+if (loginPinEl) {
+  loginPinEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') loginWithPin();
+  });
+}
 
 async function loginWithPin() {
   const section = document.getElementById('login-pin-section');
-  const playerId = section.dataset.playerId;
-  const pin = document.getElementById('login-pin').value.trim();
-  const isSetup = section.dataset.isSetup === 'true';
+  const playerId = section ? section.dataset.playerId : null;
+  const pinInput = document.getElementById('login-pin');
+  const pin = pinInput ? pinInput.value.trim() : '';
+  const isSetup = section ? section.dataset.isSetup === 'true' : false;
 
   if (pin.length !== 4 || !/^\d{4}$/.test(pin)) {
     showToast('La clave debe ser de 4 dígitos numéricos', 'error');
@@ -286,8 +301,10 @@ async function loginWithPin() {
   hideLoading();
   if (player.pin !== pin) {
     showToast('Clave incorrecta', 'error');
-    document.getElementById('login-pin').value = '';
-    document.getElementById('login-pin').focus();
+    if (pinInput) {
+      pinInput.value = '';
+      pinInput.focus();
+    }
     return;
   }
 
@@ -302,19 +319,33 @@ async function loginWithPin() {
 }
 
 // Register
-document.getElementById('btn-show-register').addEventListener('click', () => {
-  document.getElementById('login-player-list-section').style.display = 'none';
-  document.getElementById('login-register-section').style.display = 'block';
-  document.getElementById('reg-name').focus();
-});
+const btnShowRegEl = document.getElementById('btn-show-register');
+if (btnShowRegEl) {
+  btnShowRegEl.addEventListener('click', () => {
+    const listSec = document.getElementById('login-player-list-section');
+    if (listSec) listSec.style.display = 'none';
+    const regSec = document.getElementById('login-register-section');
+    if (regSec) regSec.style.display = 'block';
+    const regName = document.getElementById('reg-name');
+    if (regName) regName.focus();
+  });
+}
 
-document.getElementById('btn-back-to-list').addEventListener('click', showLoginPlayerList);
-document.getElementById('btn-back-from-pin').addEventListener('click', showLoginPlayerList);
+const btnBackToListEl = document.getElementById('btn-back-to-list');
+if (btnBackToListEl) btnBackToListEl.addEventListener('click', showLoginPlayerList);
 
-document.getElementById('btn-register').addEventListener('click', registerPlayer);
-document.getElementById('reg-pin').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') registerPlayer();
-});
+const btnBackFromPinEl = document.getElementById('btn-back-from-pin');
+if (btnBackFromPinEl) btnBackFromPinEl.addEventListener('click', showLoginPlayerList);
+
+const btnRegisterEl = document.getElementById('btn-register');
+if (btnRegisterEl) btnRegisterEl.addEventListener('click', registerPlayer);
+
+const regPinEl = document.getElementById('reg-pin');
+if (regPinEl) {
+  regPinEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') registerPlayer();
+  });
+}
 
 async function registerPlayer() {
   const name = document.getElementById('reg-name').value.trim();
@@ -576,12 +607,16 @@ function renderPichanga() {
       signupControls.style.display = 'block';
 
       // Team picker
-      document.getElementById('pick-blanco').classList.toggle('active-team', mySignup.team === 'blanco');
-      document.getElementById('pick-color').classList.toggle('active-team', mySignup.team === 'color');
+      const pb = document.getElementById('pick-blanco');
+      if (pb) pb.classList.toggle('active-team', mySignup.team === 'blanco');
+      const pc = document.getElementById('pick-color');
+      if (pc) pc.classList.toggle('active-team', mySignup.team === 'color');
 
       // Goals & Assists
-      document.getElementById('my-goals').textContent = mySignup.goals || 0;
-      document.getElementById('my-assists').textContent = mySignup.assists || 0;
+      const mg = document.getElementById('my-goals');
+      if (mg) mg.textContent = mySignup.goals || 0;
+      const ma = document.getElementById('my-assists');
+      if (ma) ma.textContent = mySignup.assists || 0;
     }
   }
 
@@ -633,58 +668,81 @@ function renderPichanga() {
 }
 
 // --- Signup Actions ---
-document.getElementById('btn-signup').addEventListener('click', async () => {
-  if (!activePichanga) return;
+const btnSignupEl = document.getElementById('btn-signup');
+if (btnSignupEl) {
+  btnSignupEl.addEventListener('click', async () => {
+    if (!activePichanga) return;
 
-  const { data, error } = await sb.from('signups').insert({
-    pichanga_id: activePichanga.id,
-    player_id: currentPlayer.id,
-    team: null,
-    goals: 0
-  }).select('*, players(name)').single();
+    const { data, error } = await sb.from('signups').insert({
+      pichanga_id: activePichanga.id,
+      player_id: currentPlayer.id,
+      team: null,
+      goals: 0,
+      assists: 0
+    }).select('*, players(name)').single();
 
-  if (error) {
-    showToast('Error al anotarte: ' + error.message, 'error');
-    return;
-  }
+    if (error) {
+      showToast('Error al anotarte: ' + error.message, 'error');
+      return;
+    }
 
-  mySignup = data;
-  activeSignups.push(data);
-  renderPichanga();
-  showToast('¡Te anotaste! 🙋');
-});
+    mySignup = data;
+    activeSignups.push(data);
+    renderPichanga();
+    showToast('¡Te anotaste! 🙋');
+  });
+}
 
-document.getElementById('btn-cancel-signup').addEventListener('click', async () => {
-  if (!mySignup) return;
+const btnCancelSignupEl = document.getElementById('btn-cancel-signup');
+if (btnCancelSignupEl) {
+  btnCancelSignupEl.addEventListener('click', async () => {
+    if (!mySignup) return;
 
-  const confirmed = await showModal('¿No juegas?', '¿Seguro que quieres bajarte de la pichanga?');
-  if (!confirmed) return;
+    const confirmed = await showModal('¿No juegas?', '¿Seguro que quieres bajarte de la pichanga?');
+    if (!confirmed) return;
 
-  const { error } = await sb.from('signups').delete().eq('id', mySignup.id);
-  if (error) {
-    showToast('Error', 'error');
-    return;
-  }
+    const { error } = await sb.from('signups').delete().eq('id', mySignup.id);
+    if (error) {
+      showToast('Error', 'error');
+      return;
+    }
 
-  activeSignups = activeSignups.filter(s => s.id !== mySignup.id);
-  mySignup = null;
-  renderPichanga();
-  showToast('Te bajaste de la pichanga');
-});
+    activeSignups = activeSignups.filter(s => s.id !== mySignup.id);
+    mySignup = null;
+    renderPichanga();
+    showToast('Te bajaste de la pichanga');
+  });
+}
 
 // Team picker
-document.getElementById('pick-blanco').addEventListener('click', () => selectTeam('blanco'));
-document.getElementById('pick-color').addEventListener('click', () => selectTeam('color'));
+const pickBlancoEl = document.getElementById('pick-blanco');
+if (pickBlancoEl) pickBlancoEl.addEventListener('click', () => selectTeam('blanco'));
+
+const pickColorEl = document.getElementById('pick-color');
+if (pickColorEl) pickColorEl.addEventListener('click', () => selectTeam('color'));
 
 async function selectTeam(team) {
-  if (!mySignup) return;
+  if (!mySignup) {
+    showToast('Debes estar anotado para elegir equipo', 'error');
+    return;
+  }
 
-  const { error } = await sb.from('signups')
+  showLoading();
+  const { data, error } = await sb.from('signups')
     .update({ team })
-    .eq('id', mySignup.id);
+    .eq('id', mySignup.id)
+    .select();
+  hideLoading();
 
   if (error) {
-    showToast('Error al elegir equipo', 'error');
+    showToast('Error al elegir equipo: ' + error.message, 'error');
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    showToast('Inscripción no encontrada. Recargando...', 'error');
+    await loadSignups();
+    renderPichanga();
     return;
   }
 
@@ -696,25 +754,76 @@ async function selectTeam(team) {
 }
 
 // Goals
-document.getElementById('btn-goal-plus').addEventListener('click', () => updateGoals(1));
-document.getElementById('btn-goal-minus').addEventListener('click', () => updateGoals(-1));
+const btnGoalPlusEl = document.getElementById('btn-goal-plus');
+if (btnGoalPlusEl) btnGoalPlusEl.addEventListener('click', () => updateGoals(1));
+
+const btnGoalMinusEl = document.getElementById('btn-goal-minus');
+if (btnGoalMinusEl) btnGoalMinusEl.addEventListener('click', () => updateGoals(-1));
 
 async function updateGoals(delta) {
-  if (!mySignup) return;
+  if (!mySignup) {
+    showToast('Debes estar anotado para sumar goles', 'error');
+    return;
+  }
   const newGoals = Math.max(0, (mySignup.goals || 0) + delta);
 
-  const { error } = await sb.from('signups')
+  const { data, error } = await sb.from('signups')
     .update({ goals: newGoals })
-    .eq('id', mySignup.id);
+    .eq('id', mySignup.id)
+    .select();
 
   if (error) {
-    showToast('Error', 'error');
+    showToast('Error al actualizar goles', 'error');
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    showToast('Inscripción no encontrada. Recargando...', 'error');
+    await loadSignups();
+    renderPichanga();
     return;
   }
 
   mySignup.goals = newGoals;
   const idx = activeSignups.findIndex(s => s.id === mySignup.id);
   if (idx >= 0) activeSignups[idx].goals = newGoals;
+  renderPichanga();
+}
+
+// Assists
+const btnAssistPlusEl = document.getElementById('btn-assist-plus');
+if (btnAssistPlusEl) btnAssistPlusEl.addEventListener('click', () => updateAssists(1));
+
+const btnAssistMinusEl = document.getElementById('btn-assist-minus');
+if (btnAssistMinusEl) btnAssistMinusEl.addEventListener('click', () => updateAssists(-1));
+
+async function updateAssists(delta) {
+  if (!mySignup) {
+    showToast('Debes estar anotado para sumar asistencias', 'error');
+    return;
+  }
+  const newAssists = Math.max(0, (mySignup.assists || 0) + delta);
+
+  const { data, error } = await sb.from('signups')
+    .update({ assists: newAssists })
+    .eq('id', mySignup.id)
+    .select();
+
+  if (error) {
+    showToast('Error al actualizar asistencias', 'error');
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    showToast('Inscripción no encontrada. Recargando...', 'error');
+    await loadSignups();
+    renderPichanga();
+    return;
+  }
+
+  mySignup.assists = newAssists;
+  const idx = activeSignups.findIndex(s => s.id === mySignup.id);
+  if (idx >= 0) activeSignups[idx].assists = newAssists;
   renderPichanga();
 }
 
@@ -725,111 +834,129 @@ function checkIsAdmin(player) {
 }
 
 // --- Admin Actions ---
-document.getElementById('btn-create-pichanga').addEventListener('click', () => {
-  if (!checkIsAdmin(currentPlayer)) {
-    showToast('Solo Gacela (Admin) puede crear pichangas', 'error');
-    return;
-  }
-  document.getElementById('modal-create-pichanga').style.display = 'flex';
-});
+const btnCreatePichangaEl = document.getElementById('btn-create-pichanga');
+if (btnCreatePichangaEl) {
+  btnCreatePichangaEl.addEventListener('click', () => {
+    if (!checkIsAdmin(currentPlayer)) {
+      showToast('Solo Gacela (Admin) puede crear pichangas', 'error');
+      return;
+    }
+    const modal = document.getElementById('modal-create-pichanga');
+    if (modal) modal.style.display = 'flex';
+  });
+}
 
-document.getElementById('btn-cancel-create-pichanga').addEventListener('click', () => {
-  document.getElementById('modal-create-pichanga').style.display = 'none';
-});
+const btnCancelCreateEl = document.getElementById('btn-cancel-create-pichanga');
+if (btnCancelCreateEl) {
+  btnCancelCreateEl.addEventListener('click', () => {
+    const modal = document.getElementById('modal-create-pichanga');
+    if (modal) modal.style.display = 'none';
+  });
+}
 
-document.getElementById('btn-confirm-create-pichanga').addEventListener('click', async () => {
-  if (!checkIsAdmin(currentPlayer)) return;
+const btnConfirmCreateEl = document.getElementById('btn-confirm-create-pichanga');
+if (btnConfirmCreateEl) {
+  btnConfirmCreateEl.addEventListener('click', async () => {
+    if (!checkIsAdmin(currentPlayer)) return;
 
-  const sede = document.getElementById('create-sede').value;
-  const hora = document.getElementById('create-hora').value;
-  const costo = parseInt(document.getElementById('create-costo').value, 10) || 2500;
+    const sede = document.getElementById('create-sede')?.value || 'Zapping Center';
+    const hora = document.getElementById('create-hora')?.value || '';
+    const costo = parseInt(document.getElementById('create-costo')?.value, 10) || 2500;
 
-  document.getElementById('modal-create-pichanga').style.display = 'none';
-  showLoading();
+    const modal = document.getElementById('modal-create-pichanga');
+    if (modal) modal.style.display = 'none';
+    showLoading();
 
-  try {
-    const { data, error } = await sb.from('pichangas').insert({
-      fecha: new Date().toISOString().split('T')[0],
-      status: 'open',
-      costo_por_cabeza: costo,
-      sede: sede
-    }).select().single();
+    try {
+      const { data, error } = await sb.from('pichangas').insert({
+        fecha: new Date().toISOString().split('T')[0],
+        status: 'open',
+        costo_por_cabeza: costo,
+        sede: sede
+      }).select().single();
+      hideLoading();
+
+      if (error) {
+        showToast('Error al crear pichanga: ' + error.message, 'error');
+        return;
+      }
+
+      activePichanga = data;
+      activeSignups = [];
+      mySignup = null;
+      renderPichanga();
+      showToast(`¡Pichanga creada en ${sede} (${hora})! 🏟️`);
+    } catch (err) {
+      hideLoading();
+      showToast('Error al crear pichanga', 'error');
+      console.error(err);
+    }
+  });
+}
+
+const btnClosePichangaEl = document.getElementById('btn-close-pichanga');
+if (btnClosePichangaEl) {
+  btnClosePichangaEl.addEventListener('click', async () => {
+    if (!currentPlayer?.is_admin || !activePichanga) return;
+
+    const confirmed = await showModal('Cerrar pichanga', '¿Seguro? Se calcularán los resultados finales.');
+    if (!confirmed) return;
+
+    // Calculate final scores
+    const scoreBl = activeSignups
+      .filter(s => s.team === 'blanco')
+      .reduce((sum, s) => sum + (s.goals || 0), 0);
+    const scoreCol = activeSignups
+      .filter(s => s.team === 'color')
+      .reduce((sum, s) => sum + (s.goals || 0), 0);
+
+    showLoading();
+    const { error } = await sb.from('pichangas')
+      .update({
+        status: 'closed',
+        score_blanco: scoreBl,
+        score_color: scoreCol
+      })
+      .eq('id', activePichanga.id);
     hideLoading();
 
     if (error) {
-      showToast('Error al crear pichanga: ' + error.message, 'error');
+      showToast('Error al cerrar pichanga', 'error');
       return;
     }
 
-    activePichanga = data;
+    showToast(`Pichanga cerrada: Blanco ${scoreBl} - ${scoreCol} Color 🏁`);
+    activePichanga = null;
     activeSignups = [];
     mySignup = null;
-    renderPichanga();
-    showToast(`¡Pichanga creada en ${sede} (${hora})! 🏟️`);
-  } catch (err) {
+    loadActivePichanga();
+  });
+}
+
+const btnDeletePichangaEl = document.getElementById('btn-delete-pichanga');
+if (btnDeletePichangaEl) {
+  btnDeletePichangaEl.addEventListener('click', async () => {
+    if (!currentPlayer?.is_admin || !activePichanga) return;
+
+    const confirmed = await showModal('Eliminar pichanga', '¿Seguro? Se borrarán todas las inscripciones.');
+    if (!confirmed) return;
+
+    showLoading();
+    const { error } = await sb.from('pichangas').delete().eq('id', activePichanga.id);
     hideLoading();
-    showToast('Error al crear pichanga', 'error');
-    console.error(err);
-  }
-});
 
-document.getElementById('btn-close-pichanga').addEventListener('click', async () => {
-  if (!currentPlayer.is_admin || !activePichanga) return;
+    if (error) {
+      showToast('Error al eliminar', 'error');
+      return;
+    }
 
-  const confirmed = await showModal('Cerrar pichanga', '¿Seguro? Se calcularán los resultados finales.');
-  if (!confirmed) return;
-
-  // Calculate final scores
-  const scoreBl = activeSignups
-    .filter(s => s.team === 'blanco')
-    .reduce((sum, s) => sum + (s.goals || 0), 0);
-  const scoreCol = activeSignups
-    .filter(s => s.team === 'color')
-    .reduce((sum, s) => sum + (s.goals || 0), 0);
-
-  showLoading();
-  const { error } = await sb.from('pichangas')
-    .update({
-      status: 'closed',
-      score_blanco: scoreBl,
-      score_color: scoreCol
-    })
-    .eq('id', activePichanga.id);
-  hideLoading();
-
-  if (error) {
-    showToast('Error al cerrar pichanga', 'error');
-    return;
-  }
-
-  showToast(`Pichanga cerrada: Blanco ${scoreBl} - ${scoreCol} Color 🏁`);
-  activePichanga = null;
-  activeSignups = [];
-  mySignup = null;
-  loadActivePichanga();
-});
-
-document.getElementById('btn-delete-pichanga').addEventListener('click', async () => {
-  if (!currentPlayer.is_admin || !activePichanga) return;
-
-  const confirmed = await showModal('Eliminar pichanga', '¿Seguro? Se borrarán todas las inscripciones.');
-  if (!confirmed) return;
-
-  showLoading();
-  const { error } = await sb.from('pichangas').delete().eq('id', activePichanga.id);
-  hideLoading();
-
-  if (error) {
-    showToast('Error al eliminar', 'error');
-    return;
-  }
-
-  showToast('Pichanga eliminada', 'error');
-  activePichanga = null;
-  activeSignups = [];
-  mySignup = null;
-  loadActivePichanga();
-});
+    showToast('Pichanga eliminada', 'error');
+    activePichanga = null;
+    activeSignups = [];
+    mySignup = null;
+    loadActivePichanga();
+  });
+}
 
 // ==========================================
 // REALTIME SUBSCRIPTIONS

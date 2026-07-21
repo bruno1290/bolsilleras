@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>Bolsilleras — Contador de Pichangas</title>
   <meta name="description" content="Contador de pichangas para el grupo Bolsilleras. Regístrate, anótate y reporta tus goles.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -166,11 +169,15 @@
                   📝 Reportar mi Equipo y Goles (Post-Partido)
                 </button>
 
+                <button class="btn btn-secondary btn-sm" id="btn-cancel-signup" style="margin-bottom:0.75rem; background:rgba(239, 68, 68, 0.15); color:#fca5a5; border:1px solid rgba(239, 68, 68, 0.3);">
+                  ❌ Bajarse de la pichanga
+                </button>
+
                 <!-- Post-match section (hidden by default until clicked) -->
                 <div id="postmatch-section" style="display:none; padding:1rem; background:rgba(0,0,0,0.2); border-radius:var(--radius-lg); margin-bottom:1rem;">
                   <!-- Disclaimer -->
                   <div class="moral-disclaimer" style="margin-bottom:0.85rem; padding:0.6rem 0.85rem; background:rgba(248, 113, 113, 0.15); border:1px solid rgba(248, 113, 113, 0.4); border-radius:var(--radius-md); color:#fca5a5; font-size:0.8rem; font-weight:700; text-align:center;">
-                    ⚠️ Por favor sé moral ctm (no te inventes goles)
+                    ⚠️ Por favor sé moral ctm (no te inventes goles ni asistencias)
                   </div>
 
                   <!-- Team picker -->
@@ -195,6 +202,16 @@
                       <button class="btn-goal-adjust" id="btn-goal-minus">−</button>
                       <span class="goals-display" id="my-goals">0</span>
                       <button class="btn-goal-adjust" id="btn-goal-plus">+</button>
+                    </div>
+                  </div>
+
+                  <!-- Assists counter -->
+                  <div class="goals-counter" style="margin-top:0.75rem;">
+                    <h4>Tus asistencias 🅰️</h4>
+                    <div class="goals-input-group">
+                      <button class="btn-goal-adjust" id="btn-assist-minus">−</button>
+                      <span class="goals-display" id="my-assists">0</span>
+                      <button class="btn-goal-adjust" id="btn-assist-plus">+</button>
                     </div>
                   </div>
                 </div>
@@ -352,6 +369,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
