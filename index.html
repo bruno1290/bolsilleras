@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 
@@ -75,7 +75,6 @@
           </div>
         </div>
         <div class="header-user">
-          <button class="header-avatar" id="header-avatar" title="Editar mi personaje"></button>
           <span class="header-username" id="header-username"></span>
           <span class="admin-badge" id="admin-badge" style="display:none;">ADMIN</span>
           <button class="btn-icon" id="btn-logout" title="Cerrar sesión">🚪</button>
@@ -343,26 +342,12 @@
     </div>
   </div>
 
-  <!-- Editor de Personaje (Avatar) -->
-  <div class="modal-overlay" id="modal-avatar" style="display:none;">
-    <div class="modal modal-avatar-box">
-      <h3>🎽 Mi Personaje</h3>
-      <div class="avatar-preview" id="avatar-preview"></div>
-      <div class="avatar-controls" id="avatar-controls"></div>
-      <div class="modal-actions" style="margin-top:1rem;">
-        <button class="btn btn-ghost" id="btn-cancel-avatar">Cancelar</button>
-        <button class="btn btn-primary" id="btn-save-avatar">Guardar</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Loading -->
   <div class="loading-overlay" id="loading-overlay" style="display:none;">
     <div class="loading-spinner"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="avatar.js?v=2"></script>
-  <script src="app.js?v=15"></script>
+  <script src="app.js?v=16"></script>
 </body>
 </html>

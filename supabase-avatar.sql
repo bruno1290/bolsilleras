@@ -1,10 +1,4 @@
--- ============================================
--- BOLSILLERAS — Columnas nuevas
--- Correr UNA vez en el SQL Editor de Supabase.
--- ============================================
-
--- Personaje (avatar) de cada jugador, guardado como JSON
-ALTER TABLE players ADD COLUMN IF NOT EXISTS avatar JSONB;
-
--- Hora de cada pichanga (texto, ej: "21:00 hrs")
-ALTER TABLE pichangas ADD COLUMN IF NOT EXISTS hora TEXT;
+-- Archivo sin uso — la función de personajes/avatares fue eliminada.
+-- La columna players.avatar ya NO es necesaria. Puedes borrar este archivo.
+-- (Si ya habías creado la columna, puedes dejarla o quitarla con:
+--   ALTER TABLE players DROP COLUMN IF EXISTS avatar; )

@@ -144,16 +144,12 @@ function renderPlayerButtons(players) {
     return;
   }
 
-  list.innerHTML = players.map(p => {
-    const face = (AVATARES_PUBLICO && p.avatar)
-      ? `<div class="player-avatar player-avatar-svg">${avatarSVG(p.avatar)}</div>`
-      : `<div class="player-avatar">${getInitials(p.name)}</div>`;
-    return `
+  list.innerHTML = players.map(p => `
     <button class="login-player-btn" data-id="${p.id}" data-name="${escapeHtml(p.name)}">
-      ${face}
+      <div class="player-avatar">${getInitials(p.name)}</div>
       <span>${escapeHtml(p.name)}</span>
-    </button>`;
-  }).join('');
+    </button>
+  `).join('');
 
   list.querySelectorAll('.login-player-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -204,11 +200,7 @@ async function showLoginPlayerList() {
   const MAX_ATTEMPTS = 3;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     try {
-      // Intentar con avatar; si la columna aún no existe, caer a solo id,name
-      let { data: players, error } = await sb.from('players').select('id, name, avatar').order('name');
-      if (error) {
-        ({ data: players, error } = await sb.from('players').select('id, name').order('name'));
-      }
+      const { data: players, error } = await sb.from('players').select('id, name').order('name');
       if (!error && players) {
         localStorage.setItem('bolsilleras_cached_players', JSON.stringify(players));
         renderPlayerButtons(players);
@@ -469,7 +461,6 @@ function enterApp() {
   currentPlayer.is_admin = isAdmin;
 
   document.getElementById('header-username').textContent = currentPlayer.name;
-  renderHeaderAvatar();
   if (isAdmin) {
     document.getElementById('admin-badge').style.display = 'inline';
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
@@ -1313,122 +1304,6 @@ function initLedBanner() {
 
   playNext();
 }
-
-// ==========================================
-// ★ EDITOR DE PERSONAJE (AVATAR) ★
-// ==========================================
-let avatarEditCfg = null;
-
-function renderHeaderAvatar() {
-  const el = document.getElementById('header-avatar');
-  if (!el || !currentPlayer) return;
-  // Oculto para el público: solo visible en modo público o para el admin (pruebas)
-  const puedeVer = AVATARES_PUBLICO || checkIsAdmin(currentPlayer);
-  if (!puedeVer) { el.style.display = 'none'; return; }
-  el.style.display = 'flex';
-  el.innerHTML = avatarSVG(currentPlayer.avatar || avatarDefault());
-}
-
-function openAvatarEditor() {
-  if (!currentPlayer) return;
-  if (!AVATARES_PUBLICO && !checkIsAdmin(currentPlayer)) return; // oculto al público
-  avatarEditCfg = avatarNormalize(currentPlayer.avatar || avatarDefault());
-  renderAvatarEditor();
-  const modal = document.getElementById('modal-avatar');
-  if (modal) modal.style.display = 'flex';
-}
-
-function renderAvatarEditor() {
-  const prev = document.getElementById('avatar-preview');
-  if (prev) prev.innerHTML = avatarSVG(avatarEditCfg);
-
-  const wrap = document.getElementById('avatar-controls');
-  if (!wrap) return;
-
-  const swatchRow = (label, key, colors) => `
-    <div class="av-row">
-      <span class="av-row-label">${label}</span>
-      <div class="av-opts">
-        ${colors.map((col, i) => `
-          <button class="av-swatch ${avatarEditCfg[key] === i ? 'active' : ''}"
-                  data-key="${key}" data-val="${i}"
-                  style="background:${col}"></button>`).join('')}
-      </div>
-    </div>`;
-
-  const chipRow = (label, key, names) => `
-    <div class="av-row">
-      <span class="av-row-label">${label}</span>
-      <div class="av-opts">
-        ${names.map((nm, i) => `
-          <button class="av-chip ${avatarEditCfg[key] === i ? 'active' : ''}"
-                  data-key="${key}" data-val="${i}">${nm}</button>`).join('')}
-      </div>
-    </div>`;
-
-  const jerseyRow = () => `
-    <div class="av-row">
-      <span class="av-row-label">Camiseta</span>
-      <div class="av-opts">
-        ${AVATAR_OPTIONS.jersey.map(j => `
-          <button class="av-chip av-chip-jersey ${avatarEditCfg.jersey === j.id ? 'active' : ''}"
-                  data-key="jersey" data-val="${j.id}">
-            <span class="av-jersey-dot" style="background:${j.main};border-color:${j.sec}"></span>${j.name}
-          </button>`).join('')}
-      </div>
-    </div>`;
-
-  wrap.innerHTML =
-    swatchRow('Piel', 'skin', AVATAR_OPTIONS.skin) +
-    chipRow('Peinado', 'hairStyle', AVATAR_OPTIONS.hairStyle) +
-    swatchRow('Color de pelo', 'hairColor', AVATAR_OPTIONS.hairColor) +
-    jerseyRow() +
-    chipRow('Accesorio', 'accessory', AVATAR_OPTIONS.accessory);
-
-  wrap.querySelectorAll('[data-key]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const k = btn.dataset.key;
-      const v = btn.dataset.val;
-      avatarEditCfg[k] = (k === 'jersey') ? v : parseInt(v, 10);
-      renderAvatarEditor();
-    });
-  });
-}
-
-async function saveAvatar() {
-  if (!currentPlayer || !avatarEditCfg) return;
-  const cfg = avatarNormalize(avatarEditCfg);
-  showLoading();
-  const { error } = await sb.from('players').update({ avatar: cfg }).eq('id', currentPlayer.id);
-  hideLoading();
-
-  if (error) {
-    showToast('Falta activar los personajes en la base de datos (avísale al admin)', 'error');
-    console.error('saveAvatar:', error);
-    return;
-  }
-
-  currentPlayer.avatar = cfg;
-  const modal = document.getElementById('modal-avatar');
-  if (modal) modal.style.display = 'none';
-  renderHeaderAvatar();
-
-  // Actualizar la caché local de jugadores para que se vea al recargar
-  try {
-    const cached = JSON.parse(localStorage.getItem('bolsilleras_cached_players') || '[]');
-    const idx = cached.findIndex(p => p.id === currentPlayer.id);
-    if (idx >= 0) { cached[idx].avatar = cfg; localStorage.setItem('bolsilleras_cached_players', JSON.stringify(cached)); }
-  } catch (e) {}
-
-  showToast('¡Personaje guardado! 🎽');
-}
-
-document.getElementById('header-avatar')?.addEventListener('click', openAvatarEditor);
-document.getElementById('btn-save-avatar')?.addEventListener('click', saveAvatar);
-document.getElementById('btn-cancel-avatar')?.addEventListener('click', () => {
-  const modal = document.getElementById('modal-avatar');
-  if (modal) modal.style.display = 'none';
-});
 
 // ==========================================
 // INIT
