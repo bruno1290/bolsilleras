@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -190,7 +190,16 @@
                     </div>
                   </div>
 
-                  <p style="margin-top:0.75rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">Marca tu equipo y tus goles. Quién gana lo define el Admin. 👑</p>
+                  <!-- ¿Cuánto te salió? -->
+                  <div class="goals-counter" style="margin-top:0.75rem;">
+                    <h4>¿Cuánto te salió la pichanga? 💵</h4>
+                    <div class="costo-input-group">
+                      <span class="costo-signo">$</span>
+                      <input type="number" id="my-costo" inputmode="numeric" min="0" step="500" placeholder="2500">
+                    </div>
+                  </div>
+
+                  <p style="margin-top:0.75rem; font-size:0.78rem; color:var(--text-muted); text-align:center;">Marca tu equipo, tus goles y lo que pagaste. Quién gana lo define el Admin. 👑</p>
                 </div>
               </div>
             </div>
@@ -348,6 +357,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=16"></script>
+  <script src="app.js?v=17"></script>
 </body>
 </html>

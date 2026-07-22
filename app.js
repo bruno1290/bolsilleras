@@ -664,6 +664,12 @@ function renderPichanga() {
     // Goles del jugador
     const mg = document.getElementById('my-goals');
     if (mg) mg.textContent = mySignup.goals || 0;
+
+    // Cuánto le salió la pichanga
+    const mc = document.getElementById('my-costo');
+    if (mc && document.activeElement !== mc) {
+      mc.value = (mySignup.costo != null) ? mySignup.costo : '';
+    }
   }
 
   // Total de anotados (el detalle de convocados vive en la pestaña Pichangas)
@@ -798,6 +804,39 @@ async function updateGoals(delta) {
   const idx = activeSignups.findIndex(s => s.id === mySignup.id);
   if (idx >= 0) activeSignups[idx].goals = newGoals;
   renderPichanga();
+}
+
+// ¿Cuánto te salió la pichanga? (monto que pagó el jugador)
+const myCostoEl = document.getElementById('my-costo');
+if (myCostoEl) {
+  myCostoEl.addEventListener('change', () => updateCosto(myCostoEl.value));
+  myCostoEl.addEventListener('blur', () => updateCosto(myCostoEl.value));
+}
+
+async function updateCosto(val) {
+  if (!mySignup) return;
+  const costo = Math.max(0, parseInt(val, 10) || 0);
+  if (costo === (mySignup.costo || 0)) return; // sin cambios
+
+  // Intentar guardar; si la columna 'costo' aún no existe, avisar sin romper
+  let { data, error } = await sb.from('signups')
+    .update({ costo }).eq('id', mySignup.id).select();
+
+  if (error) {
+    showToast('Falta activar el campo de costo en la base de datos', 'error');
+    console.error('updateCosto:', error);
+    return;
+  }
+  if (!data || data.length === 0) {
+    await loadSignups();
+    renderPichanga();
+    return;
+  }
+
+  mySignup.costo = costo;
+  const idx = activeSignups.findIndex(s => s.id === mySignup.id);
+  if (idx >= 0) activeSignups[idx].costo = costo;
+  showToast('💵 Monto guardado: $' + costo.toLocaleString('es-CL'));
 }
 
 function checkIsAdmin(player) {
@@ -1020,10 +1059,18 @@ async function loadStats() {
       return;
     }
 
-    const { data: signups, error: sError } = await sb
+    // Intentar traer el costo reportado por cada jugador; si la columna aún
+    // no existe, caer al select sin costo (se usará el costo de la pichanga)
+    let { data: signups, error: sError } = await sb
       .from('signups')
-      .select('player_id, team, goals, assists, pichanga_id, players(name)')
+      .select('player_id, team, goals, assists, costo, pichanga_id, players(name)')
       .in('pichanga_id', pichangas.map(p => p.id));
+    if (sError) {
+      ({ data: signups, error: sError } = await sb
+        .from('signups')
+        .select('player_id, team, goals, assists, pichanga_id, players(name)')
+        .in('pichanga_id', pichangas.map(p => p.id)));
+    }
 
     if (sError || !signups || signups.length === 0) {
       toggleTables(false);
@@ -1051,7 +1098,10 @@ async function loadStats() {
     ps.assists += (s.assists || 0);
 
     const pich = pichangaMap[s.pichanga_id];
-    const cost = pich ? (pich.costo_por_cabeza || 2500) : 2500;
+    // Usar el monto que el jugador reportó; si no reportó, el costo de la pichanga
+    const cost = (s.costo != null && s.costo > 0)
+      ? s.costo
+      : (pich ? (pich.costo_por_cabeza || 2500) : 2500);
     ps.totalSpent += cost;
 
     // Victorias/derrotas solo si el admin ya definió el resultado

@@ -1264,3 +1264,25 @@ main {
   width: 14px; height: 14px; border-radius: 50%;
   border: 2px solid; display: inline-block; flex: 0 0 auto;
 }
+
+/* ===== Input "¿Cuánto te salió?" ===== */
+.costo-input-group {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0.4rem;
+}
+.costo-signo { font-size: 1.3rem; font-weight: 800; color: var(--yellow); }
+.costo-input-group input {
+  width: 130px;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1.1rem; font-weight: 700; text-align: center;
+  outline: none;
+}
+.costo-input-group input:focus {
+  border-color: var(--yellow);
+  box-shadow: 0 0 0 3px var(--yellow-glow);
+}
