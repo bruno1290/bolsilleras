@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -75,6 +75,7 @@
           </div>
         </div>
         <div class="header-user">
+          <button class="header-avatar" id="header-avatar" title="Editar mi personaje"></button>
           <span class="header-username" id="header-username"></span>
           <span class="admin-badge" id="admin-badge" style="display:none;">ADMIN</span>
           <button class="btn-icon" id="btn-logout" title="Cerrar sesión">🚪</button>
@@ -108,16 +109,18 @@
           <div class="led-track" id="led-track"></div>
         </div>
 
+        <!-- Botón Crear Pichanga (cualquier jugador, cuando no hay una abierta) -->
+        <button class="btn btn-primary btn-lg" id="btn-create-pichanga" onclick="openCreatePichangaModal()" style="display:none; width:100%; margin-bottom:1rem;">
+          ➕ Crear Pichanga
+        </button>
+
         <!-- No pichanga state -->
         <div id="pichanga-empty" style="display:none;">
           <div class="empty-state">
             <span class="empty-icon">🏟️</span>
-            <p>No hay pichanga abierta actualmente</p>
-            <p class="empty-hint">Gacela (Admin): Crea la pichanga del Gran Estreno abajo 👇</p>
+            <p>No hay ninguna pichanga todavía</p>
+            <p class="empty-hint">Crea una con el botón de arriba 👆 y los demás se anotan.</p>
           </div>
-          <button class="btn btn-primary btn-lg admin-only" id="btn-create-pichanga" onclick="openCreatePichangaModal()" style="display:none; margin-top:1rem;">
-            🚀 Crear Pichanga del Gran Estreno
-          </button>
         </div>
 
         <!-- Active pichanga -->
@@ -126,7 +129,7 @@
             <!-- Match Metadata Info Bar -->
             <div class="match-info-bar">
               <div class="info-item"><span>📍</span> Sede: <strong id="pichanga-venue">Zapping Center</strong></div>
-              <div class="info-item"><span>🕘</span> Hora: <strong>21:00 hrs</strong></div>
+              <div class="info-item"><span>🕘</span> Hora: <strong id="pichanga-hora">21:00 hrs</strong></div>
               <div class="info-item"><span>💵</span> Costo por jugador: <strong id="pichanga-cost">$2.500</strong></div>
             </div>
 
@@ -305,25 +308,16 @@
     <div class="modal">
       <h3>➕ Crear Nueva Pichanga</h3>
       <div class="form-group" style="margin-top:1rem;">
-        <label for="create-sede">📍 Sede / Estadio</label>
+        <label for="create-sede">📍 Lugar</label>
         <select id="create-sede" style="width:100%; padding:0.75rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem;">
-          <option value="Zapping Center">📺 Zapping Center (Gran Estreno)</option>
-          <option value="El Pantano">🐊 El Pantano</option>
+          <option value="Zapping Center">📺 Zapping Center</option>
           <option value="Lo Cañas">⚽ Lo Cañas</option>
+          <option value="El Pantano">🐊 Pantano</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="create-hora">🕘 Hora del Partido</label>
-        <select id="create-hora" style="width:100%; padding:0.75rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem;">
-          <option value="21:00 hrs">21:00 hrs (Horario Estelar)</option>
-          <option value="20:00 hrs">20:00 hrs</option>
-          <option value="22:00 hrs">22:00 hrs</option>
-          <option value="19:00 hrs">19:00 hrs</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="create-costo">💵 Costo por Jugador ($)</label>
-        <input type="number" id="create-costo" value="2500" placeholder="2500">
+        <label for="create-hora">🕘 Hora</label>
+        <input type="time" id="create-hora" value="21:00" style="width:100%; padding:0.75rem; background:var(--bg-input); border:1px solid var(--border-color); border-radius:var(--radius-md); color:var(--text-primary); font-size:0.95rem;">
       </div>
       <div class="modal-actions">
         <button class="btn btn-ghost" id="btn-cancel-create-pichanga">Cancelar</button>
@@ -349,12 +343,26 @@
     </div>
   </div>
 
+  <!-- Editor de Personaje (Avatar) -->
+  <div class="modal-overlay" id="modal-avatar" style="display:none;">
+    <div class="modal modal-avatar-box">
+      <h3>🎽 Mi Personaje</h3>
+      <div class="avatar-preview" id="avatar-preview"></div>
+      <div class="avatar-controls" id="avatar-controls"></div>
+      <div class="modal-actions" style="margin-top:1rem;">
+        <button class="btn btn-ghost" id="btn-cancel-avatar">Cancelar</button>
+        <button class="btn btn-primary" id="btn-save-avatar">Guardar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Loading -->
   <div class="loading-overlay" id="loading-overlay" style="display:none;">
     <div class="loading-spinner"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="app.js?v=12"></script>
+  <script src="avatar.js?v=2"></script>
+  <script src="app.js?v=15"></script>
 </body>
 </html>
